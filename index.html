@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Connect</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#ece5dd}.hidden{display:none!important}button{cursor:pointer}
+.header{background:#075e54;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
+.dotBtn{font-size:26px;background:none;border:none;color:#fff}
+.menu{position:absolute;right:10px;top:55px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);width:220px;z-index:50;overflow:hidden}
+.menu button{display:block;width:100%;text-align:left;padding:13px;border:none;background:#fff;border-bottom:1px solid #eee}
+.tabs{display:flex;background:#075e54;color:#fff}.tabs button{flex:1;padding:12px;border:none;background:#075e54;color:#cfd8dc;font-weight:bold}.tabs button.active{color:#fff;border-bottom:3px solid #fff}
+.auth{max-width:420px;margin:24px auto;background:#fff;padding:22px;border-radius:14px}
+.auth h1{color:#075e54;text-align:center}.auth p{text-align:center;color:#666;font-size:13px;margin:6px 0 14px}
+.auth input{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
+.auth button{width:100%;padding:13px;background:#25d366;border:none;color:#fff;font-weight:bold;border-radius:8px;margin-top:10px}
+.auth .link{color:#075e54;text-align:center;margin-top:12px;cursor:pointer}.small{font-size:12px;color:#888;text-align:center;margin-top:8px}
+.codeBox{background:#dcf8c6;border:2px dashed #075e54;padding:14px;border-radius:10px;text-align:center;margin:10px 0}
+.codeBox b{font-size:26px;color:#075e54}
+.list{background:#fff;min-height:70vh}.item{display:flex;gap:12px;padding:12px;border-bottom:1px solid #f0f0f0;align-items:center;cursor:pointer}
+.avatar{width:48px;height:48px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold}
+.chatHead{background:#075e54;color:#fff;padding:10px;display:flex;gap:10px;align-items:center}
+.chatHead button{background:none;border:none;color:#fff;font-size:22px}
+.chatBox{padding:12px;padding-bottom:90px;min-height:70vh}
+.msg{max-width:78%;padding:8px 10px;border-radius:10px;margin:6px 0}.me{background:#dcf8c6;margin-left:auto}.other{background:#fff}
+.msg small{display:block;font-size:10px;color:#888;text-align:right}.msg img,.msg video{width:100%;border-radius:8px;margin-top:6px}
+.inputBar{position:fixed;bottom:0;left:0;right:0;background:#f0f0f0;padding:8px;display:flex;gap:6px;align-items:center}
+.inputBar input[type=text]{flex:1;padding:12px;border-radius:20px;border:none;outline:none}
+.iconBtn{width:42px;height:42px;border-radius:50%;border:none;background:#fff;font-size:19px}.sendBtn{background:#25d366!important;color:#fff}
+.callScreen{position:fixed;inset:0;background:#111;color:#fff;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+.callScreen video{width:100%;max-width:420px;height:280px;background:#000;border-radius:14px;object-fit:cover}
+.callBtns{display:flex;gap:12px}.callBtns button{width:56px;height:56px;border-radius:50%;border:none;font-size:22px}.endCall{background:#ea0033!important;color:#fff}
+.libGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}.libGrid img,.libGrid video{width:100%;height:150px;object-fit:cover;border-radius:10px;background:#000}
+.libCard{background:#fff;padding:10px;border-radius:10px;margin:10px}.libCard input{width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin:6px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modalBox{background:#fff;width:100%;max-width:400px;border-radius:14px;padding:18px}.modalBox input{width:100%;padding:11px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
+.modalBox button{width:100%;padding:12px;background:#075e54;color:#fff;border:none;border-radius:8px;margin-top:8px;font-weight:bold}
+.closeBtn{background:#eee!important;color:#333!important}.fab{position:fixed;bottom:80px;right:16px;width:56px;height:56px;border-radius:50%;background:#25d366;color:#fff;font-size:26px;border:none}
+.familyBanner{background:#dcfce7;padding:10px;font-size:14px}
+</style>
+</head>
+<body>
+<div id="authPage" class="auth">
+<h1>💬 Family Connect</h1><p>Every family has its own secret Code</p>
+<div id="regBox">
+<input id="regName" placeholder="Full Name">
+<input id="regPhone" placeholder="Phone Number e.g. 0977399807">
+<input id="regEmail" placeholder="Email" type="email">
+<input id="regPass" placeholder="Create Password" type="password">
+<button onclick="register()">REGISTER → NEXT</button>
+</div>
+<div id="loginBox" class="hidden">
+<input id="loginPhone" placeholder="Phone Number">
+<input id="loginPass" placeholder="Password" type="password">
+<button onclick="login()">LOGIN</button>
+</div>
+<div class="link" onclick="toggleAuth()" id="toggleText">Already registered? Click to Login</div>
+</div>
+<div id="familyPage" class="auth hidden">
+<h1>👨‍👩‍👧‍👦 My Family</h1><p id="welcomeFamily"></p>
+<b>Option 1: I am FIRST in my family</b>
+<input id="familyName" placeholder="Family Name e.g. SAKALA FAMILY">
+<button onclick="createFamily()">CREATE MY FAMILY + GET CODE</button>
+<p style="margin:12px 0;text-align:center"><b>OR</b></p>
+<b>Option 2: My family already has a Code</b>
+<input id="joinCode" placeholder="Enter Family Code e.g. SAKALA-4821" style="text-transform:uppercase">
+<button onclick="joinFamily()" style="background:#075e54">JOIN MY FAMILY WITH CODE</button>
+<div id="myCodeResult"></div>
+</div><div id="mainApp" class="hidden">
+<div class="header"><h2>Family Connect</h2>
+<div style="display:flex;gap:14px;font-size:20px;align-items:center">
+<span onclick="showLibrary()">🖼️</span><span onclick="openNewChat()">💬</span>
+<button class="dotBtn" onclick="toggleMenu(event)">⋮</button></div>
+<div id="dotMenu" class="menu hidden">
+<button onclick="doBackup()">💾 Backup - Download All Data</button>
+<button onclick="openRestore()">♻️ Restore Backup</button>
+<button onclick="openSettings()">⚙️ Settings</button>
+<button onclick="showMyCode()">🔑 My Family Code</button>
+<button onclick="leaveFamily()">🚪 Leave / Switch Family</button>
+<button onclick="logout()">🚪 Logout</button>
+</div></div>
+<div class="familyBanner" id="familyBanner"></div>
+<div class="tabs">
+<button id="tabChats" class="active" onclick="switchTab('chats')">CHATS</button>
+<button id="tabCalls" onclick="switchTab('calls')">CALLS</button>
+<button id="tabLibrary" onclick="switchTab('library')">LIBRARY</button>
+<button id="tabMembers" onclick="switchTab('members')">FAMILY</button>
+</div>
+<div id="viewChats" class="list"></div>
+<div id="viewCalls" class="list hidden"></div>
+<div id="viewLibrary" class="hidden">
+<div class="libCard"><b>🔒 Family Library</b><br><span style="font-size:13px;color:#666">Only members with your Family Code can see this.</span>
+<label style="display:block;background:#25d366;color:#fff;padding:11px;text-align:center;border-radius:8px;margin-top:10px;cursor:pointer">📷 Add Photo / Video<input type="file" id="libFile" accept="image/*,video/*" style="display:none" onchange="addToLibrary(event)"></label>
+<div id="libStatus" class="small"></div></div>
+<div id="libGrid" class="libGrid"></div></div>
+<div id="viewMembers" class="list hidden"></div>
+<button class="fab" onclick="openNewChat()">+</button>
+</div>
+<div id="chatRoom" class="hidden">
+<div class="chatHead"><button onclick="closeChat()">←</button>
+<div class="avatar" id="chatAvatar">P</div>
+<div style="flex:1"><b id="chatName">Name</b><br><span style="font-size:12px;opacity:.8">In my family</span></div>
+<button onclick="startAudioCall()">📞</button>
+<button onclick="startVideoCall()">📹</button></div>
+<div id="chatBox" class="chatBox"></div>
+<div class="inputBar">
+<label class="iconBtn" style="display:flex;align-items:center;justify-content:center">📎<input type="file" id="chatFile" accept="image/*,video/*" style="display:none" onchange="sendFile(event)"></label>
+<input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
+<button class="iconBtn sendBtn" onclick="sendMsg()">➤</button>
+</div></div>
+<div id="callScreen" class="callScreen hidden">
+<h2 id="callTitle">Video Call</h2><p id="callWith">Calling...</p>
+<video id="localVideo" autoplay playsinline muted></video>
+<p id="callTimer">00:00</p>
+<div class="callBtns"><button onclick="toggleMic()" id="micBtn">🎤</button><button onclick="toggleCam()" id="camBtn">📹</button><button class="endCall" onclick="endCall()">📞</button></div>
+<small>Uses your phone camera/mic.</small></div>
+<div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div>
+<input type="file" id="restoreFile" accept=".json" style="display:none" onchange="doRestore(event)"><script>
+let DB=JSON.parse(localStorage.getItem('familyConnectDB')||'{"users":[],"families":[],"chats":[],"library":[],"calls":[]}');
+let ME=JSON.parse(localStorage.getItem('familyConnectME')||'null');
+let currentChat=null,callInterval=null,callSec=0,localStream=null,micOn=true,camOn=true;
+function save(){localStorage.setItem('familyConnectDB',JSON.stringify(DB));localStorage.setItem('familyConnectME',JSON.stringify(ME));}
+function toggleAuth(){let r=document.getElementById('regBox').classList.contains('hidden');document.getElementById('regBox').classList.toggle('hidden',!r);document.getElementById('loginBox').classList.toggle('hidden',r);document.getElementById('toggleText').innerText=r?'Already registered? Click to Login':'New? Click to Register';}
+function register(){let n=document.getElementById('regName').value.trim(),p=document.getElementById('regPhone').value.trim(),e=document.getElementById('regEmail').value.trim(),pw=document.getElementById('regPass').value.trim();if(!n||!p||!e||!pw)return alert('Fill all: Name, Phone, Email, Password');if(!e.includes('@'))return alert('Enter valid Email');ME={name:n,phone:p,email:e,pass:pw,familyCode:'',familyName:''};DB.users=DB.users.filter(u=>u.phone!==p);DB.users.push(ME);save();showFamilyPage();}
+function login(){let p=document.getElementById('loginPhone').value.trim(),pw=document.getElementById('loginPass').value.trim();let u=DB.users.find(x=>x.phone===p&&x.pass===pw);if(!u)return alert('Wrong Phone or Password');ME=u;save();if(ME.familyCode)enterApp();else showFamilyPage();}
+function showFamilyPage(){document.getElementById('authPage').classList.add('hidden');document.getElementById('familyPage').classList.remove('hidden');document.getElementById('welcomeFamily').innerText='Hello '+ME.name+' ('+ME.phone+')';}
+function makeCode(fn){let b=(fn||'FAMILY').replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,7)||'FAMILY';return b+'-'+Math.floor(1000+Math.random()*9000);}
+function createFamily(){let fn=document.getElementById('familyName').value.trim();if(!fn)return alert('Enter Family Name e.g. SAKALA FAMILY');let code=makeCode(fn);while(DB.families.find(f=>f.code===code))code=makeCode(fn);DB.families.push({code:code,name:fn,creator:ME.phone,members:[ME.phone]});ME.familyCode=code;ME.familyName=fn;save();document.getElementById('myCodeResult').innerHTML='<div class="codeBox">✅ Family Created!<br><b>'+code+'</b><br><span style="font-size:13px">SHARE this Code to your family.</span><br><br><button onclick="enterApp()" style="background:#075e54">ENTER MY FAMILY APP →</button></div>';}
+function joinFamily(){let code=document.getElementById('joinCode').value.trim().toUpperCase();if(!code)return alert('Enter Family Code');let fam=DB.families.find(f=>f.code===code);if(!fam)return alert('❌ Code NOT FOUND: '+code);if(!fam.members.includes(ME.phone))fam.members.push(ME.phone);ME.familyCode=fam.code;ME.familyName=fam.name;save();alert('✅ You joined '+fam.name+'! Code: '+fam.code);enterApp();}
+function leaveFamily(){if(!confirm('Leave this family?'))return;let fam=DB.families.find(f=>f.code===ME.familyCode);if(fam)fam.members=fam.members.filter(p=>p!==ME.phone);ME.familyCode='';ME.familyName='';save();location.reload();}
+function logout(){ME=null;save();location.reload();}
+function enterApp(){document.getElementById('authPage').classList.add('hidden');document.getElementById('familyPage').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');document.getElementById('familyBanner').innerHTML='👨‍👩‍👧 <b>'+ME.familyName+'</b> • Code: <b>'+ME.familyCode+'</b> • You: '+ME.name;renderChats();renderCalls();renderLibrary();renderMembers();}
+if(ME&&ME.familyCode)enterApp();else if(ME)showFamilyPage();
+function toggleMenu(e){e.stopPropagation();document.getElementById('dotMenu').classList.toggle('hidden');}
+document.addEventListener('click',()=>{let m=document.getElementById('dotMenu');if(m)m.classList.add('hidden');});
+function showMyCode(){alert('SHARE TO YOUR FAMILY:\n\nFamily: '+ME.familyName+'\nCode: '+ME.familyCode+'\n\nTell them: Register → Join Family → Type '+ME.familyCode);}
+function openSettings(){showModal('<h3>⚙️ Settings</h3>Name: '+ME.name+'<br>Phone: '+ME.phone+'<br>Email: '+ME.email+'<br>Family: '+ME.familyName+' ('+ME.familyCode+')<br><br><label>Change Name</label><input id="setName" value="'+ME.name+'"><button onclick="saveSettings()">SAVE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');}
+function saveSettings(){ME.name=document.getElementById('setName').value.trim()||ME.name;let u=DB.users.find(x=>x.phone===ME.phone);if(u)u.name=ME.name;save();alert('Saved');closeModal();enterApp();}
+function doBackup(){let b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='FamilyConnect-Backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();alert('Backup Downloaded!');}
+function openRestore(){document.getElementById('restoreFile').click();}
+function doRestore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{DB=JSON.parse(r.result);save();alert('Backup Restored!');location.reload();}catch(err){alert('Invalid backup file');}};r.readAsText(f);}
+function switchTab(t){['chats','calls','library','members'].forEach(x=>{document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('hidden',x!==t);document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===t);});}
+function showLibrary(){switchTab('library');}
+function renderMembers(){let fam=DB.families.find(f=>f.code===ME.familyCode);let ms=DB.users.filter(u=>fam&&fam.members.includes(u.phone));let el=document.getElementById('viewMembers');if(ms.length===0){el.innerHTML='<p style="padding:20px;text-align:center">No members yet.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}el.innerHTML='<p style="padding:12px"><b>'+ME.familyName+'</b> - '+ms.length+' member(s) • Code: '+ME.familyCode+'</p>'+ms.map(m=>'<div class="item"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div><b>'+m.name+'</b><br><span>'+m.phone+' • '+m.email+'</span></div><span>'+(m.phone===ME.phone?'YOU':'')+'</span></div>').join('');}function openNewChat(){let fam=DB.families.find(f=>f.code===ME.familyCode);let ms=DB.users.filter(u=>fam&&fam.members.includes(u.phone)&&u.phone!==ME.phone);if(ms.length===0)return alert('No family members yet.\nShare your Code: '+ME.familyCode);let o=ms.map(m=>'<button onclick="createChat(\''+m.phone+'\',\''+m.name.replace(/'/g,"")+'\')" style="background:#fff;color:#222;border:1px solid #ddd;text-align:left">'+m.name+' - '+m.phone+'</button>').join('');showModal('<h3>Chat with Family Member</h3><p style="font-size:13px">Only your family (Code '+ME.familyCode+')</p>'+o+'<button class="closeBtn" onclick="closeModal()">CANCEL</button>');}
+function createChat(ph,nm){let id='chat_'+ME.familyCode+'_'+ph;if(!DB.chats.find(c=>c.id===id))DB.chats.push({id:id,familyCode:ME.familyCode,name:nm,phone:ph,messages:[{from:'system',text:'Chat with '+nm+' in '+ME.familyName,time:new Date().toLocaleTimeString()}]});save();closeModal();renderChats();openChat(id);}
+function renderChats(){let my=DB.chats.filter(c=>c.familyCode===ME.familyCode);let el=document.getElementById('viewChats');if(my.length===0){el.innerHTML='<p style="padding:20px;text-align:center;color:#888">No chats yet.<br>Tap + to chat.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}el.innerHTML=my.map(c=>{let l=c.messages[c.messages.length-1];return '<div class="item" onclick="openChat(\''+c.id+'\')"><div class="avatar">'+c.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>'+c.name+'</b><br><span>'+(l?l.text.slice(0,40):'')+'</span></div><span>'+(l?l.time:'')+'</span></div>';}).join('');}
+function openChat(id){currentChat=DB.chats.find(c=>c.id===id);if(!currentChat)return;document.getElementById('mainApp').classList.add('hidden');document.getElementById('chatRoom').classList.remove('hidden');document.getElementById('chatName').innerText=currentChat.name;document.getElementById('chatAvatar').innerText=currentChat.name.charAt(0).toUpperCase();renderMessages();}
+function closeChat(){document.getElementById('chatRoom').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');renderChats();}
+function renderMessages(){let box=document.getElementById('chatBox');box.innerHTML=currentChat.messages.map(m=>{let cls=m.from==='me'?'me':'other';let media='';if(m.type==='image')media='<img src="'+m.data+'">';if(m.type==='video')media='<video src="'+m.data+'" controls></video>';return '<div class="msg '+cls+'">'+(m.text?m.text:'')+media+'<small>'+(m.time||'')+'</small></div>';}).join('');box.scrollTop=box.scrollHeight;}
+function sendMsg(){let inp=document.getElementById('chatInput');let t=inp.value.trim();if(!t)return;currentChat.messages.push({from:'me',text:t,time:new Date().toLocaleTimeString()});inp.value='';save();renderMessages();}
+function sendFile(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{let ty=f.type.startsWith('video')?'video':'image';currentChat.messages.push({from:'me',text:'📎 '+f.name,type:ty,data:r.result,time:new Date().toLocaleTimeString()});DB.library.push({name:f.name,type:ty,data:r.result,by:ME.name,familyCode:ME.familyCode,time:new Date().toLocaleString()});save();renderMessages();alert('Sent + Saved to Family Library');};r.readAsDataURL(f);}
+function renderCalls(){let el=document.getElementById('viewCalls');let my=DB.calls.filter(c=>c.familyCode===ME.familyCode);if(my.length===0){el.innerHTML='<p style="padding:20px;text-align:center;color:#888">No calls yet.</p>';return;}el.innerHTML=my.map(c=>'<div class="item"><div class="avatar">'+(c.type==='video'?'📹':'📞')+'</div><div style="flex:1"><b>'+c.with+'</b><br><span>'+c.type+' • '+c.duration+'</span></div><span>'+c.time+'</span></div>').join('');}
+function startVideoCall(){startCall('video');}function startAudioCall(){startCall('audio');}
+async function startCall(type){document.getElementById('callScreen').classList.remove('hidden');document.getElementById('callTitle').innerText=type==='video'?'📹 Video Call':'📞 Audio Call';document.getElementById('callWith').innerText='With '+currentChat.name+' • Family: '+ME.familyName;document.getElementById('localVideo').style.display=type==='video'?'block':'none';callSec=0;document.getElementById('callTimer').innerText='00:00';callInterval=setInterval(()=>{callSec++;let m=String(Math.floor(callSec/60)).padStart(2,'0'),s=String(callSec%60).padStart(2,'0');document.getElementById('callTimer').innerText=m+':'+s;},1000);try{localStream=await navigator.mediaDevices.getUserMedia({video:type==='video',audio:true});if(type==='video')document.getElementById('localVideo').srcObject=localStream;}catch(e){alert('Allow Camera / Mic to make calls.');}DB.calls.unshift({with:currentChat.name,type:type,familyCode:ME.familyCode,duration:'In progress',time:new Date().toLocaleString()});save();}
+function toggleMic(){micOn=!micOn;if(localStream)localStream.getAudioTracks().forEach(t=>t.enabled=micOn);document.getElementById('micBtn').innerText=micOn?'🎤':'🔇';}
+function toggleCam(){camOn=!camOn;if(localStream)localStream.getVideoTracks().forEach(t=>t.enabled=camOn);document.getElementById('camBtn').innerText=camOn?'📹':'🚫';}
+function endCall(){clearInterval(callInterval);if(localStream)localStream.getTracks().forEach(t=>t.stop());if(DB.calls[0])DB.calls[0].duration=document.getElementById('callTimer').innerText;save();document.getElementById('callScreen').classList.add('hidden');renderCalls();}
+function renderLibrary(){let list=DB.library.filter(x=>x.familyCode===ME.familyCode);let g=document.getElementById('libGrid');let st=document.getElementById('libStatus');if(st)st.innerText=list.length?list.length+' items in '+ME.familyName+' Library':'Library is empty.';if(!g)return;if(list.length===0){g.innerHTML='<p style="grid-column:1/3;text-align:center;color:#888;padding:20px">No photos yet.<br>Only Code '+ME.familyCode+' can see this.</p>';return;}g.innerHTML=list.map(it=>it.type==='video'?'<video src="'+it.data+'" controls></video>':'<img src="'+it.data+'">').join('');}
+function addToLibrary(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{DB.library.push({name:f.name,type:f.type.startsWith('video')?'video':'image',data:r.result,by:ME.name,familyCode:ME.familyCode,time:new Date().toLocaleString()});save();renderLibrary();alert('Added to '+ME.familyName+' Library! Only Code '+ME.familyCode+' can see it.');};r.readAsDataURL(f);}
+function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+</script>
+</body>
+</html>
