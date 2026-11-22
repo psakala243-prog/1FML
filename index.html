@@ -390,29 +390,23 @@ if(owner===''){
 if(it.by===ME.name) owner=ME.phone;
 else {
 let found=Object.values(myMembers).find(m=>m.name===it.by);
-if(found) owner=found.phone; else owner='unknown';
+if(found) owner=found.phone; else owner=ME.phone;
 }
 }
 if(!byMember[owner]) byMember[owner]=[];
 byMember[owner].push({key:key,item:it});
 });
-if(libSelectedMember==='all'){
-if(title) title.innerText='All Family Folders - Tap a name to open';
+if(st) st.innerText=Object.keys(_allLib).length+' total files in family - Showing ALL below';
+if(title) title.innerText='All Files - '+Object.keys(_allLib).length+' files';
 if(foldersEl){
 let members=Object.values(myMembers);
-if(members.length===0) members=Object.keys(byMember).map(p=>({name:p,phone:p}));
 foldersEl.innerHTML=members.map(m=>{
 let count=(byMember[m.phone]||[]).length;
-let pics=(byMember[m.phone]||[]).filter(x=>x.item.type==='image').length;
-let vids=(byMember[m.phone]||[]).filter(x=>x.item.type==='video').length;
-let mus=(byMember[m.phone]||[]).filter(x=>x.item.type==='music').length;
-let docs=(byMember[m.phone]||[]).filter(x=>x.item.type==='pdf'||x.item.type==='doc').length;
-return '<div class="item" onclick="openMemberFolder(\''+m.phone+'\')"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>📁 '+m.name+' Folder</b><br><span>'+count+' files • Pics '+pics+' • Vids '+vids+' • Music '+mus+' • Docs '+docs+'</span><br><span style="color:#1565c0;font-size:12px">Tap to Open</span></div><span style="font-size:22px">›</span></div>';
+return '<div class="item" onclick="openMemberFolder(\''+m.phone+'\')"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>📁 '+m.name+' Folder</b><br><span>'+count+' files</span></div><span>›</span></div>';
 }).join('');
 }
-if(st) st.innerText=Object.keys(_allLib).length+' total files in family • Each member has own folder';
 let allItems=Object.entries(_allLib).map(([k,v])=>({key:k,item:v}));
-showLibGrid(allItems,g); return;
+showLibGrid(allItems,g);
 }
 let member=myMembers[libSelectedMember]||{name:libSelectedMember,phone:libSelectedMember};
 if(title) title.innerHTML='📁 <b>'+member.name+' Folder</b> <button onclick="showAllFolders()" style="width:auto;padding:6px 10px;background:#eee;color:#333;border:none;border-radius:8px;font-size:12px">Back to All Folders</button>';
