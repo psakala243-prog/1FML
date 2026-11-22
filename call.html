@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1FML Call</title>
+<style>
+body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:20px}
+video{width:90%;max-width:400px;background:#000;border-radius:15px;margin:10px}
+button{padding:15px 25px;margin:5px;border:0;border-radius:30px;font-size:16px;font-weight:bold}
+#callBtn{background:#25D366;color:#fff}
+#videoBtn{background:#007bff;color:#fff}
+#answerBtn{background:#25D366;color:#fff;display:none}
+#endBtn{background:red;color:#fff}
+input{padding:12px;width:80%;border-radius:10px;border:0;margin:10px}
+#status{margin:15px;color:#ffcc00}
+</style>
+</head>
+<body>
+<h2>📞 1FML Call</h2>
+<p>Your Name:</p>
+<input id="myName" placeholder="e.g. Patrick">
+<p>Who to call:</p>
+<input id="peerName" placeholder="e.g. Mum">
+<div id="status">Ready</div>
+<video id="localVideo" autoplay muted playsinline></video>
+<video id="remoteVideo" autoplay playsinline></video>
+<br>
+<button id="callBtn" onclick="startCall(false)">📞 Voice Call</button>
+<button id="videoBtn" onclick="startCall(true)">📹 Video Call</button>
+<button id="answerBtn" onclick="answerCall()">✅ Answer</button>
+<br><button id="endBtn" onclick="endCall()">❌ End Call</button>
+<audio id="ringtone" loop src="https://actions.google.com/sounds/v1/alarms/phone_call.ogg"></audio>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAyCHCH1DqRVt_kDpAdJ9XsaNfT6xuenAs",
+  authDomain: "fml-165ea.firebaseapp.com",
+  databaseURL: "https://fml-165ea-default-rtdb.firebaseio.com",
+  projectId: "fml-165ea",
+  storageBucket: "fml-165ea.firebasestorage.app",
+  messagingSenderId: "173373069427",
+  appId: "1:173373069427:web:f28824c783e1bf4319f206"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let pc, localStream, incomingOffer=null, myCallId=null, peerCallId=null;
+const statusEl = document.getElementById('status');
+
+function getNames(){
+  return {me: document.getElementById('myName').value.trim().toLowerCase(), peer: document.getElementById('peerName').value.trim().toLowerCase()};
+}
+
+// Listen for incoming call for ME
+setInterval(()=>{
+  const {me} = getNames();
+  if(!me) return;
+  db.ref('calls/'+me).once('value', snap=>{
+    const data = snap.val();
+    if(data && data.offer && !incomingOffer){
+      incomingOffer = data;
+      peerCallId = data.from;
+      document.getElementById('ringtone').play().catch(()=>{});
+      document.getElementById('answerBtn').style.display='inline-block';
+      statusEl.innerText = '📞 Incoming call from ' + data.from + ' - Tap Answer!';
+      navigator.vibrate && navigator.vibrate([500,200,500]);
+    }
+  });
+}, 2000);
+
+async function startCall(withVideo){
+  const {me, peer} = getNames();
+  if(!me || !peer){ alert('Type your name and who to call'); return; }
+  statusEl.innerText = 'Calling ' + peer + '... Ringing...';
+  await setupPeer(withVideo);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await db.ref('calls/'+peer).set({offer:{type:offer.type, sdp:offer.sdp}, from:me, video:withVideo, time:Date.now()});
+  myCallId = peer;
+  // Listen for answer
+  db.ref('calls/'+me+'/answer').on('value', async snap=>{
+    const ans = snap.val();
+    if(ans && pc.signalingState!=='stable'){
+      await pc.setRemoteDescription(new RTCSessionDescription(ans));
+      statusEl.innerText = 'Connected to ' + peer;
+    }
+  });
+  db.ref('calls/'+peer+'/ice').on('child_added', snap=>{ if(snap.val()) pc.addIceCandidate(new RTCIceCandidate(snap.val())); });
+}
+
+async function answerCall(){
+  const {me} = getNames();
+  document.getElementById('ringtone').pause();
+  document.getElementById('answerBtn').style.display='none';
+  await setupPeer(incomingOffer.video);
+  await pc.setRemoteDescription(new RTCSessionDescription(incomingOffer.offer));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await db.ref('calls/'+peerCallId).child('answer').set({type:answer.type, sdp:answer.sdp});
+  db.ref('calls/'+me).remove();
+  statusEl.innerText = 'Connected!';
+}
+
+async function setupPeer(withVideo){
+  pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:withVideo});
+  document.getElementById('localVideo').srcObject = localStream;
+  localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+  pc.ontrack = e=>{ document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+  const {me, peer} = getNames();
+  const target = peer || peerCallId;
+  pc.onicecandidate = e=>{ if(e.candidate) db.ref('calls/'+target+'/ice').push(e.candidate.toJSON()); };
+  // Listen for remote ICE
+  db.ref('calls/'+me+'/ice').on('child_added', snap=>{ if(snap.val()) pc.addIceCandidate(new RTCIceCandidate(snap.val())); });
+}
+
+async function endCall(){
+  document.getElementById('ringtone').pause();
+  const {me, peer} = getNames();
+  if(pc) pc.close();
+  if(localStream) localStream.getTracks().forEach(t=>t.stop());
+  await db.ref('calls/'+(peer||peerCallId)).remove();
+  await db.ref('calls/'+me).remove();
+  statusEl.innerText = 'Call Ended';
+  location.reload();
+}
+</script>
+</body>
+</html>
