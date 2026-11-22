@@ -408,8 +408,6 @@ return '<div class="item" onclick="openMemberFolder(\''+m.phone+'\')"><div class
 let allItems=Object.entries(_allLib).map(([k,v])=>({key:k,item:v}));
 showLibGrid(allItems,g);
 }
-let member=myMembers[libSelectedMember]||{name:libSelectedMember,phone:libSelectedMember};
-if(title) title.innerHTML='📁 <b>'+member.name+' Folder</b> <button onclick="showAllFolders()" style="width:auto;padding:6px 10px;background:#eee;color:#333;border:none;border-radius:8px;font-size:12px">Back to All Folders</button>';
 if(foldersEl) foldersEl.innerHTML='<p style="padding:10px;background:#e3f2fd;border-radius:8px">Showing <b>'+member.name+'</b> only • Pictures, Videos, Music, Documents • Filter: '+libFilter+'</p>';
 function showLibGrid(items,g){
 let filtered=items.filter(({item})=>{
