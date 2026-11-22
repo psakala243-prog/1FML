@@ -380,7 +380,7 @@ if(f.type.startsWith('image')) ty='image';
 else if(f.type.startsWith('video')) ty='video';
 else if(f.type.startsWith('audio') || f.name.toLowerCase().endsWith('.mp3')) ty='music';
 else if(f.type==='application/pdf' || f.name.toLowerCase().endsWith('.pdf')) ty='pdf';
-let lo={name:f.name,type:ty,data:r.result,[STRIPPED]
+let lo={name:f.name,type:ty,data:r.result,by:ME.name,ownerPhone:ME.phone,ownerName:ME.name};
 lo.ts=Date.now();
 await db.ref('families/'+ME.familyCode+'/library').push(lo);
 alert('Added to YOUR Folder ('+ME.name+')! Family can tap your name to see it ☁️ File: '+f.name);
