@@ -500,5 +500,155 @@ window.showLibGrid = function(items, g){
 window.openLibFolder = function(){ window.renderLibrary(); };
 window.selectLibMember = function(){ window.renderLibrary(); };
 window.openLib = function(){ window.renderLibrary(); };
+</script><script>
+// === 1FML BOTTOM FIX v2 - LIBRARY + CHAT BADGES ===
+(function(){
+  // ---------- 1. FIND LIBRARY FILES FROM ANYWHERE ----------
+  function findLibFiles(){
+    var out = {};
+    // A. From known variables
+    ['_allLib','_libData','libData','library','LIB','allLib'].forEach(function(n){
+      var v = window[n];
+      if(v && typeof v === 'object') Object.keys(v).forEach(function(k){
+        var item = v[k]; if(!item) return;
+        var it = item.it || item.item || item;
+        if(it && (it.data || it.url || it.src)) out[k] = it;
+      });
+    });
+    // B. From localStorage - scan ALL keys
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        try{
+          var val = JSON.parse(localStorage.getItem(k));
+          if(!val || typeof val !== 'object') continue;
+          Object.keys(val).forEach(function(k2){
+            var item = val[k2]; if(!item || typeof item !== 'object') return;
+            var it = item.it || item.item || item;
+            if(it && (it.data || it.url || it.src) && (String(it.data||it.url||'').slice(0,20).indexOf('data:')===0 || String(it.url||'').indexOf('http')===0)){
+              out[k2] = it;
+            }
+          });
+          // Single file object in storage
+          if(val.data || val.url) out[k] = val;
+        }catch(e){}
+      }
+    }catch(e){}
+    return out;
+  }
+
+  // ---------- 2. LIBRARY - SHOW ALL ----------
+  window.renderLibrary = function(){
+    var box = document.getElementById('libBox');
+    if(!box) return;
+    var files = findLibFiles();
+    var keys = Object.keys(files);
+    var html = '<p style="font-size:12px;color:#666">Found: '+keys.length+' files • If 0, files are in Cloud - see below</p>';
+    html += '<div id="libGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"></div>';
+    html += '<div id="libDebug" style="font-size:11px;color:#999;margin-top:10px;word-break:break-all"></div>';
+    box.innerHTML = html;
+    var g = document.getElementById('libGrid');
+    var dbg = document.getElementById('libDebug');
+    if(keys.length===0){
+      g.innerHTML = '<p style="grid-column:1/3;text-align:center;color:#888;padding:20px">No files found in this phone.<br>Files may be saved under a different name.<br><br><b>Tap Add to add 1 file and test.</b></p>';
+      if(dbg) dbg.innerText = 'Keys checked: _allLib=' + (window._allLib?Object.keys(window._allLib).length:0) + ' | localStorage keys=' + localStorage.length;
+      return;
+    }
+    window.showLibGrid(keys.map(function(k){ return {key:k, it:files[k]}; }), g);
+  };
+
+  window.showLibGrid = function(items, g){
+    if(!g) return;
+    if(!items || !items.length){ g.innerHTML = '<p style="grid-column:1/3;text-align:center">No files</p>'; return; }
+    items.sort(function(a,b){ return ((b.it&&b.it.ts)||0)-((a.it&&a.it.ts)||0); });
+    g.innerHTML = items.map(function(o){
+      var it = o.it||{}; var key = o.key; var src = it.data||it.url||it.src||'';
+      var t = (it.type||'').toLowerCase();
+      var isImg = t.indexOf('image')>=0 || src.indexOf('data:image')===0 || src.match(/\.(jpg|jpeg|png|gif|webp)/i);
+      var isVid = t.indexOf('video')>=0 || src.indexOf('data:video')===0 || src.match(/\.(mp4|mov|webm)/i);
+      var thumb = '';
+      if(isImg) thumb = '<img src="'+src+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#eee" onerror="this.parentElement.innerHTML=\'<div style=height:150px;display:flex;align-items:center;justify-content:center;background:#eee>⚠️ Image link broken<br>Re-upload this file</div>\'">';
+      else if(isVid) thumb = '<video src="'+src+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#000" controls></video>';
+      else if(t.indexOf('audio')>=0 || t.indexOf('music')>=0) thumb = '<div style="height:150px;background:#e8f5e9;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:40px">🎵</span><audio src="'+src+'" controls style="width:90%"></audio></div>';
+      else if(t.indexOf('pdf')>=0) thumb = '<div style="height:150px;background:#e3f2fd;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px">📕</div>';
+      else thumb = '<div style="height:150px;background:#fff3e0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px">📄</div>';
+      return '<div style="cursor:pointer" onclick="if(window.openViewerById)openViewerById(\''+key+'\');else if(window.openLibViewer)openLibViewer(\''+key+'\');else window.open(src||\''+src+'\')">'+thumb+'<div style="background:#fff;padding:6px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+(it.name||'File')+'<br><span style="color:#666">By: '+(it.by||it.owner||'')+'</span></div></div>';
+    }).join('');
+  };
+  window.openLibFolder = function(){ window.renderLibrary(); };
+  window.selectLibMember = function(){ window.renderLibrary(); };
+
+  // ---------- 3. CHAT BADGES - UNREAD + MISSED CALLS ----------
+  function getUnread(){ try{ return JSON.parse(localStorage.getItem('1FML_unread')||'{}'); }catch(e){ return {}; } }
+  function getMissed(){ try{ return JSON.parse(localStorage.getItem('1FML_missed')||'{}'); }catch(e){ return {}; } }
+  function setUnread(o){ localStorage.setItem('1FML_unread', JSON.stringify(o)); }
+  function setMissed(o){ localStorage.setItem('1FML_missed', JSON.stringify(o)); }
+
+  // Call this from anywhere when a new message arrives: window.markUnread('Patrick Sakala')
+  window.markUnread = function(person){
+    if(!person) return;
+    if(window.currentChat === person || window.openChat === person) return;
+    var u = getUnread(); u[person] = (u[person]||0)+1; setUnread(u);
+    paintBadges();
+  };
+  window.markMissedCall = function(person){
+    if(!person) return;
+    var m = getMissed(); m[person] = (m[person]||0)+1; setMissed(m);
+    paintBadges();
+  };
+  window.clearBadgesFor = function(person){
+    var u = getUnread(); delete u[person]; setUnread(u);
+    var m = getMissed(); delete m[person]; setMissed(m);
+    paintBadges();
+  };
+
+  function paintBadges(){
+    var unread = getUnread(); var missed = getMissed();
+    // Find every chat row - looks for name text
+    document.querySelectorAll('[onclick*="openChat"], [onclick*="openDM"], .chat-row, .chat-item').forEach(function(row){
+      var txt = row.innerText || '';
+      Object.keys(unread).forEach(function(person){
+        if(txt.indexOf(person) >= 0 && !row.querySelector('.unread-badge')){
+          var b = document.createElement('span');
+          b.className = 'unread-badge';
+          b.innerText = unread[person];
+          b.style.cssText = 'background:#ff1744;color:#fff;min-width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;padding:0 6px;margin-left:6px;float:right';
+          // Put badge next to name - try to find name element
+          var nameEl = row.querySelector('b, strong, .chat-name') || row;
+          nameEl.appendChild(b);
+        }
+      });
+      Object.keys(missed).forEach(function(person){
+        if(txt.indexOf(person) >= 0 && !row.querySelector('.missed-badge')){
+          var m = document.createElement('span');
+          m.className = 'missed-badge';
+          m.innerText = '📞 Missed: ' + missed[person];
+          m.style.cssText = 'background:#fff3e0;color:#e65100;font-size:11px;font-weight:bold;padding:2px 6px;border-radius:10px;margin-left:6px';
+          var nameEl2 = row.querySelector('b, strong, .chat-name') || row;
+          nameEl2.appendChild(m);
+        }
+      });
+      // Clear badges when you tap to open that chat
+      row.addEventListener('click', function(){
+        Object.keys(unread).forEach(function(p){ if(txt.indexOf(p)>=0) window.clearBadgesFor(p); });
+        Object.keys(missed).forEach(function(p){ if(txt.indexOf(p)>=0) window.clearBadgesFor(p); });
+      });
+    });
+  }
+
+  // Re-paint badges every 2 seconds + when list changes
+  setInterval(paintBadges, 2000);
+  if(window.MutationObserver){
+    new MutationObserver(paintBadges).observe(document.body, {childList:true, subtree:true});
+  }
+
+  // Hook: if your app already calls these when a message/call arrives, we count it
+  var origAlert = window.onNewMessage;
+  window.onNewMessage = function(person, msg){
+    window.markUnread(person);
+    if(origAlert) origAlert(person, msg);
+  };
+})();
 </script></body>
 </html>
