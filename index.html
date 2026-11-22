@@ -650,5 +650,65 @@ window.openLib = function(){ window.renderLibrary(); };
     if(origAlert) origAlert(person, msg);
   };
 })();
+</script><script>
+// === 1FML MAKE IT LIKE WHATSAPP - Installable App ===
+(function(){
+  // 1. Manifest - tells phone "this is an app, not a website"
+  var manifest = {
+    name: "1FML Family",
+    short_name: "1FML",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: "#1565c0",
+    orientation: "portrait",
+    icons: [
+      {src: "https://cdn-icons-png.flaticon.com/512/1946/1946429.png", sizes: "192x192", type: "image/png"},
+      {src: "https://cdn-icons-png.flaticon.com/512/1946/1946429.png", sizes: "512x512", type: "image/png"}
+    ]
+  };
+  var blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('link');
+  link.rel = 'manifest'; link.href = url;
+  document.head.appendChild(link);
+
+  // 2. Tell phone to open fullscreen like WhatsApp
+  var metas = [
+    ['mobile-web-app-capable','yes'],
+    ['apple-mobile-web-app-capable','yes'],
+    ['apple-mobile-web-app-status-bar-style','black-translucent'],
+    ['apple-mobile-web-app-title','1FML'],
+    ['theme-color','#1565c0']
+  ];
+  metas.forEach(function(m){
+    var mt = document.createElement('meta');
+    mt.name = m[0]; mt.content = m[1];
+    document.head.appendChild(mt);
+  });
+
+  // 3. Service Worker - works offline like WhatsApp
+  if('serviceWorker' in navigator){
+    var swCode = "self.addEventListener('fetch', function(e){ e.respondWith(fetch(e.request).catch(function(){ return caches.match(e.request); })); });";
+    var swBlob = new Blob([swCode], {type:'text/javascript'});
+    var swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(function(){});
+  }
+
+  // 4. Show INSTALL button if not installed yet
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    window._installPrompt = e;
+    if(document.getElementById('installBtn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'installBtn';
+    btn.innerText = '📲 INSTALL 1FML LIKE WHATSAPP';
+    btn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#25D366;color:#fff;border:none;padding:14px 20px;border-radius:30px;font-weight:bold;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.3)';
+    btn.onclick = function(){
+      if(window._installPrompt){ window._installPrompt.prompt(); window._installPrompt.userChoice.then(function(){ btn.remove(); }); }
+    };
+    document.body.appendChild(btn);
+  });
+})();
 </script></body>
 </html>
