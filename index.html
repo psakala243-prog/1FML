@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>1FML - Family Connect Blue</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0d47a1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4436/4436481.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#e3f2fd}.hidden{display:none!important}button{cursor:pointer}
+.header{background:#0d47a1;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
+.dotBtn{font-size:26px;background:none;border:none;color:#fff}
+.menu{position:absolute;right:10px;top:55px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);width:230px;z-index:50;overflow:hidden}
+.menu button{display:block;width:100%;text-align:left;padding:13px;border:none;background:#fff;border-bottom:1px solid #eee}
+.tabs{display:flex;background:#0d47a1;color:#fff}.tabs button{flex:1;padding:12px;border:none;background:#0d47a1;color:#bbdefb;font-weight:bold}.tabs button.active{color:#fff;border-bottom:3px solid #fff}
+.auth{max-width:420px;margin:24px auto;background:#fff;padding:22px;border-radius:14px;box-shadow:0 4px 20px rgba(13,71,161,.15)}
+.auth h1{color:#0d47a1;text-align:center}.auth p{text-align:center;color:#666;font-size:13px;margin:6px 0 14px}
+.auth input{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
+.auth button{width:100%;padding:13px;background:#1565c0;border:none;color:#fff;font-weight:bold;border-radius:8px;margin-top:10px}
+.auth .link{color:#0d47a1;text-align:center;margin-top:12px;cursor:pointer}.small{font-size:12px;color:#888;text-align:center;margin-top:8px}
+.codeBox{background:#e3f2fd;border:2px dashed #0d47a1;padding:14px;border-radius:10px;text-align:center;margin:10px 0}
+.codeBox b{font-size:22px;color:#0d47a1;word-break:break-all}
+.list{background:#fff;min-height:70vh}.item{display:flex;gap:12px;padding:12px;border-bottom:1px solid #f0f0f0;align-items:center;cursor:pointer}
+.avatar{width:48px;height:48px;border-radius:50%;background:#1565c0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold}
+.chatHead{background:#0d47a1;color:#fff;padding:10px;display:flex;gap:10px;align-items:center}
+.chatHead button{background:none;border:none;color:#fff;font-size:22px}
+.chatBox{padding:12px;padding-bottom:90px;min-height:70vh}
+.msg{max-width:78%;padding:8px 10px;border-radius:10px;margin:6px 0}.me{background:#bbdefb;margin-left:auto}.other{background:#fff;border:1px solid #eee}
+.msg small{display:block;font-size:10px;color:#888;text-align:right}.msg img,.msg video{width:100%;border-radius:8px;margin-top:6px}
+.inputBar{position:fixed;bottom:0;left:0;right:0;background:#f0f0f0;padding:8px;display:flex;gap:6px;align-items:center}
+.inputBar input[type=text]{flex:1;padding:12px;border-radius:20px;border:none;outline:none}
+.iconBtn{width:42px;height:42px;border-radius:50%;border:none;background:#fff;font-size:19px}.sendBtn{background:#1565c0!important;color:#fff}
+.callScreen{position:fixed;inset:0;background:#0d1b2a;color:#fff;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+.callScreen video{width:100%;max-width:420px;height:280px;background:#000;border-radius:14px;object-fit:cover}
+.callBtns{display:flex;gap:12px}.callBtns button{width:56px;height:56px;border-radius:50%;border:none;font-size:22px}.endCall{background:#ea0033!important;color:#fff}
+.libGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}.libGrid img,.libGrid video{width:100%;height:150px;object-fit:cover;border-radius:10px;background:#000}
+.libCard{background:#fff;padding:10px;border-radius:10px;margin:10px}.libCard input{width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin:6px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;overflow-y:auto}
+.modalBox{background:#fff;width:100%;max-width:500px;border-radius:14px;padding:18px;max-height:90vh;overflow-y:auto}.modalBox input{width:100%;padding:11px;margin:6px 0;border:1px solid #ccc;border-radius:8px}
+.modalBox button{width:100%;padding:12px;background:#0d47a1;color:#fff;border:none;border-radius:8px;margin-top:8px;font-weight:bold}
+.closeBtn{background:#eee!important;color:#333!important}.fab{position:fixed;bottom:80px;right:16px;width:56px;height:56px;border-radius:50%;background:#1565c0;color:#fff;font-size:26px;border:none}
+.familyBanner{background:#e3f2fd;padding:10px;font-size:14px;color:#0d47a1}
+.syncDot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#1565c0;margin-right:5px}
+@media (orientation: landscape){
+.auth{max-width:600px;margin:10px auto}
+.chatBox{padding-bottom:80px}
+.callScreen video{height:180px;max-width:320px}
+.libGrid{grid-template-columns:1fr 1fr 1fr 1fr}
+.header{padding:8px 16px}
+.modalBox{max-width:700px}
+}
+</style>
+</head>
+<body>
+<div id="authPage" class="auth">
+<h1>💙 1FML</h1><p>Family Connect • BLUE • Real Sync • Every Family Has Own Code • Rotates ↔️</p>
+<div id="regBox">
+<input id="regName" placeholder="Full Name">
+<input id="regPhone" placeholder="Phone e.g. 0977399807">
+<input id="regEmail" placeholder="Email" type="email">
+<input id="regPass" placeholder="Create Password" type="password">
+<button onclick="register()">REGISTER → NEXT</button>
+</div>
+<div id="loginBox" class="hidden">
+<input id="loginPhone" placeholder="Phone Number">
+<input id="loginPass" placeholder="Password" type="password">
+<button onclick="login()">LOGIN</button>
+</div>
+<div class="link" onclick="toggleAuth()" id="toggleText">Already registered? Click to Login</div>
+</div>
+<div id="familyPage" class="auth hidden">
+<h1>👨‍👩‍👧‍👦 My Family</h1><p id="welcomeFamily"></p>
+<b>Option 1: I am FIRST in my family</b>
+<input id="familyName" placeholder="Family Name e.g. SAKALA FAMILY">
+<button onclick="createFamily()">CREATE MY FAMILY + GET CODE</button>
+<p style="margin:12px 0;text-align:center"><b>OR</b></p>
+<b>Option 2: My family already has a Code</b>
+<input id="joinCode" placeholder="Enter Family Code" style="text-transform:uppercase">
+<button onclick="joinFamily()" style="background:#0d47a1">JOIN MY FAMILY WITH CODE</button>
+<div id="myCodeResult"></div>
+</div>
+<div id="mainApp" class="hidden">
+<div class="header"><h2>1FML 💙</h2>
+<div style="display:flex;gap:14px;font-size:20px;align-items:center">
+<span onclick="showLibrary()">🖼️</span><span onclick="openNewChat()">💬</span>
+<button class="dotBtn" onclick="toggleMenu(event)">⋮</button></div>
+<div id="dotMenu" class="menu hidden">
+<button onclick="doBackup()">💾 Backup - Download All Data</button>
+<button onclick="openSettings()">⚙️ Settings</button>
+<button onclick="showMyCode()">🔑 My Family Code</button>
+<button onclick="leaveFamily()">🚪 Leave / Switch Family</button>
+<button onclick="logout()">🚪 Logout</button>
+</div></div>
+<div class="familyBanner" id="familyBanner"></div>
+<div class="tabs">
+<button id="tabChats" class="active" onclick="switchTab('chats')">CHATS</button>
+<button id="tabCalls" onclick="switchTab('calls')">CALLS</button>
+<button id="tabLibrary" onclick="switchTab('library')">LIBRARY</button>
+<button id="tabMembers" onclick="switchTab('members')">FAMILY</button>
+</div>
+<div id="viewChats" class="list"></div>
+<div id="viewCalls" class="list hidden"></div>
+<div id="viewLibrary" class="hidden">
+<div class="libCard"><b>📁 Family Folders - SYNCED ☁️</b><br><span style="font-size:13px;color:#666">Tap a family member name to open HIS/HER folder. Each person has own Pictures, Videos, Music, Documents.</span>
+<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+<button onclick="setLibFilter('all')" id="filterAll" style="background:#0d47a1;color:#fff;border:none;padding:8px 12px;border-radius:20px">All</button>
+<button onclick="setLibFilter('image')" id="filterImage" style="background:#e3f2fd;color:#0d47a1;border:none;padding:8px 12px;border-radius:20px">🖼️ Pictures</button>
+<button onclick="setLibFilter('video')" id="filterVideo" style="background:#e3f2fd;color:#0d47a1;border:none;padding:8px 12px;border-radius:20px">🎬 Videos</button>
+<button onclick="setLibFilter('music')" id="filterMusic" style="background:#e3f2fd;color:#0d47a1;border:none;padding:8px 12px;border-radius:20px">🎵 Music</button>
+<button onclick="setLibFilter('pdf')" id="filterPdf" style="background:#e3f2fd;color:#0d47a1;border:none;padding:8px 12px;border-radius:20px">📄 Documents</button>
+<button onclick="setLibFilter('doc')" id="filterDoc" style="background:#e3f2fd;color:#0d47a1;border:none;padding:8px 12px;border-radius:20px">📕 Other Docs</button>
+</div>
+<label style="display:block;background:#1565c0;color:#fff;padding:11px;text-align:center;border-radius:8px;margin-top:10px;cursor:pointer">📂 Add to MY Folder - Photo / Video / Music / Document<input type="file" id="libFile" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.mp3,.mp4" style="display:none" onchange="addToLibrary(event)"></label>
+<div id="libStatus" class="small"></div>
+<div id="libMemberTitle" style="font-weight:bold;color:#0d47a1;margin-top:10px"></div>
+</div>
+<div id="libFolders"></div>
+<div id="libGrid" class="libGrid"></div></div>
+<div id="viewMembers" class="list hidden"></div>
+<button class="fab" onclick="openNewChat()">+</button>
+</div>
+<div id="chatRoom" class="hidden">
+<div class="chatHead"><button onclick="closeChat()">←</button>
+<div class="avatar" id="chatAvatar">P</div>
+<div style="flex:1"><b id="chatName">Name</b><br><span style="font-size:12px;opacity:.8"><span class="syncDot"></span>Synced • In my family</span></div>
+<button onclick="startAudioCall()">📞</button>
+<button onclick="startVideoCall()">📹</button></div>
+<div id="chatBox" class="chatBox"></div>
+<div class="inputBar">
+<label class="iconBtn" style="display:flex;align-items:center;justify-content:center">📎<input type="file" id="chatFile" accept="image/*,video/*" style="display:none" onchange="sendFile(event)"></label>
+<input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
+<button class="iconBtn sendBtn" onclick="sendMsg()">➤</button>
+</div></div>
+<div id="callScreen" class="callScreen hidden">
+<h2 id="callTitle">Video Call</h2><p id="callWith">Calling...</p>
+<video id="localVideo" autoplay playsinline muted></video>
+<video id="remoteVideo" autoplay playsinline style="display:none"></video>
+<p id="callTimer">00:00</p>
+<div class="callBtns"><button onclick="toggleMic()" id="micBtn">🎤</button><button onclick="toggleCam()" id="camBtn">📹</button><button class="endCall" onclick="endCall()">📞</button></div>
+<small>Real call via Firebase signalling.</small></div>
+<div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyAyCHCH1DqRVt_kDpAdJ9XsaNfT6xuenAs",authDomain:"fml-165ea.firebaseapp.com",databaseURL:"https://fml-165ea-default-rtdb.firebaseio.com",projectId:"fml-165ea",storageBucket:"fml-165ea.firebasestorage.app",messagingSenderId:"173373069427",appId:"1:173373069427:web:c23aed3df3fe881819f206",measurementId:"G-F8M131FT2G"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+let ME=JSON.parse(localStorage.getItem('1FML_ME')||'null');
+let currentChat=null,callInterval=null,callSec=0,localStream=null,micOn=true,camOn=true,myChats={},myMembers={};
+let libFilter='all',libSelectedMember='all',_allLib={};
+function saveMe(){localStorage.setItem('1FML_ME',JSON.stringify(ME));}
+function toggleAuth(){let r=document.getElementById('regBox').classList.contains('hidden');document.getElementById('regBox').classList.toggle('hidden',!r);document.getElementById('loginBox').classList.toggle('hidden',r);document.getElementById('toggleText').innerText=r?'Already registered? Click to Login':'New? Click to Register';}
+function cleanCode(c){return c.trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');}
+function cleanPhone(p){return p.replace(/[^0-9]/g,'');}
+async function register(){
+let n=document.getElementById('regName').value.trim(),p=cleanPhone(document.getElementById('regPhone').value),e=document.getElementById('regEmail').value.trim(),pw=document.getElementById('regPass').value.trim();
+if(!n||!p||!e||!pw)return alert('Fill all: Name, Phone, Email, Password');
+if(!e.includes('@'))return alert('Enter valid Email');
+ME={name:n,phone:p,email:e,pass:pw,familyCode:'',familyName:''};
+await db.ref('users/'+p).set(ME); saveMe(); showFamilyPage();
+}
+async function login(){
+let p=cleanPhone(document.getElementById('loginPhone').value),pw=document.getElementById('loginPass').value.trim();
+let snap=await db.ref('users/'+p).once('value'); let u=snap.val();
+if(!u||u.pass!==pw)return alert('Wrong Phone or Password');
+ME=u; saveMe(); if(ME.familyCode)enterApp(); else showFamilyPage();
+}
+function showFamilyPage(){document.getElementById('authPage').classList.add('hidden');document.getElementById('familyPage').classList.remove('hidden');document.getElementById('welcomeFamily').innerText='Hello '+ME.name+' ('+ME.phone+')';}
+function makeCode(fn){let b=(fn||'FAMILY').replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,7)||'FAMILY';return b+'-'+Math.floor(1000+Math.random()*9000);}
+async function createFamily(){
+let fn=document.getElementById('familyName').value.trim(); if(!fn)return alert('Enter Family Name e.g. SAKALA FAMILY');
+let code=makeCode(fn);
+let exists=await db.ref('families/'+code).once('value'); while(exists.val()){code=makeCode(fn); exists=await db.ref('families/'+code).once('value');}
+let fo={name:fn,creator:ME.phone}; fo.ts=Date.now();
+await db.ref('families/'+code).set(fo);
+await db.ref('families/'+code+'/members/'+ME.phone).set(ME);
+ME.familyCode=code; ME.familyName=fn; await db.ref('users/'+ME.phone).set(ME); saveMe();
+document.getElementById('myCodeResult').innerHTML='<div class="codeBox">✅ Family Created!<br><b>'+code+'</b><br><span style="font-size:13px">SHARE this Code to your family.</span><br><br><button onclick="enterApp()" style="background:#0d47a1">ENTER MY FAMILY APP →</button></div>';
+}
+async function joinFamily(){
+let code=cleanCode(document.getElementById('joinCode').value); if(!code)return alert('Enter Family Code');
+let snap=await db.ref('families/'+code).once('value'); let fam=snap.val();
+if(!fam)return alert('Code NOT FOUND: '+code);
+await db.ref('families/'+code+'/members/'+ME.phone).set(ME);
+ME.familyCode=code; ME.familyName=fam.name; await db.ref('users/'+ME.phone).set(ME); saveMe();
+alert('You joined '+fam.name+'! Code: '+code); enterApp();
+}
+async function leaveFamily(){if(!confirm('Leave this family?'))return;await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).remove();ME.familyCode='';ME.familyName='';await db.ref('users/'+ME.phone).set(ME);saveMe();location.reload();}
+function logout(){ME=null;saveMe();location.reload();}
+function enterApp(){
+document.getElementById('authPage').classList.add('hidden');document.getElementById('familyPage').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');
+document.getElementById('familyBanner').innerHTML='👨‍👩‍👧 <b>'+ME.familyName+'</b> • Code: <b>'+ME.familyCode+'</b> • You: '+ME.name+' • <span style="color:#1565c0">● Synced ☁️</span>';
+listenFamily();
+}
+function listenFamily(){
+if(!ME||!ME.familyCode)return;
+db.ref('families/'+ME.familyCode+'/members').on('value',s=>{myMembers=s.val()||{};renderMembers();renderChatsList();});
+db.ref('families/'+ME.familyCode+'/chats').on('value',s=>{myChats=s.val()||{};renderChatsList();});
+db.ref('families/'+ME.familyCode+'/library').on('value',s=>{renderLibrary(s.val()||{});});
+db.ref('families/'+ME.familyCode+'/calls').on('value',s=>{renderCalls(s.val()||{});});
+}
+if(ME&&ME.familyCode)enterApp(); else if(ME)showFamilyPage();<script>
+function toggleMenu(e){e.stopPropagation();document.getElementById('dotMenu').classList.toggle('hidden');}
+document.addEventListener('click',()=>{let m=document.getElementById('dotMenu');if(m)m.classList.add('hidden');});
+function showMyCode(){alert('SHARE TO YOUR FAMILY:\n\nFamily: '+ME.familyName+'\nCode: '+ME.familyCode);}
+function openSettings(){showModal('<h3>⚙️ Settings</h3>Name: '+ME.name+'<br>Phone: '+ME.phone+'<br>Email: '+ME.email+'<br>Family: '+ME.familyName+' ('+ME.familyCode+')<br><br><label>Change Name</label><input id="setName" value="'+ME.name+'"><button onclick="saveSettings()">SAVE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');}
+async function saveSettings(){ME.name=document.getElementById('setName').value.trim()||ME.name;await db.ref('users/'+ME.phone).set(ME);await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).set(ME);saveMe();alert('Saved & Synced');closeModal();enterApp();}
+async function doBackup(){let snap=await db.ref('families/'+ME.familyCode).once('value');let b=new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='1FML-Backup-'+ME.familyCode+'.json';a.click();alert('Backup Downloaded!');}
+function switchTab(t){['chats','calls','library','members'].forEach(x=>{document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('hidden',x!==t);document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===t);});}
+function showLibrary(){switchTab('library');}
+function renderMembers(){
+let list=Object.values(myMembers);let el=document.getElementById('viewMembers');
+if(list.length===0){el.innerHTML='<p style="padding:20px;text-align:center">No members yet.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}
+el.innerHTML='<p style="padding:12px"><b>'+ME.familyName+'</b> - '+list.length+' member(s) • Tap a name to open his/her folder</p>'+list.map(m=>'<div class="item" onclick="openMemberFolderFromMembers(\''+m.phone+'\')"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>'+m.name+'</b><br><span>'+m.phone+' • '+m.email+'</span><br><span style="color:#1565c0">📁 Tap to Open Folder →</span></div><span>'+(m.phone===ME.phone?'YOU':'›')+'</span></div>').join('');
+}
+function openMemberFolderFromMembers(phone){libSelectedMember=phone;switchTab('library');renderLibrary(_allLib);}
+function chatIdFor(o){let a=[ME.phone,o].sort();return 'chat_'+a[0]+'_'+a[1];}
+function openNewChat(){
+let ms=Object.values(myMembers).filter(m=>m.phone!==ME.phone);
+if(ms.length===0)return alert('No family members yet. Share your Code: '+ME.familyCode);
+let o=ms.map(m=>'<button onclick="createChat(\''+m.phone+'\',\''+m.name.replace(/\'/g,"")+'\')" style="background:#fff;color:#222;border:1px solid #ddd;text-align:left">'+m.name+' - '+m.phone+'</button>').join('');
+showModal('<h3>Chat with Family Member</h3><p style="font-size:13px">Only your family (Code '+ME.familyCode+') • Synced</p>'+o+'<button class="closeBtn" onclick="closeModal()">CANCEL</button>');
+}
+async function createChat(ph,nm){
+let id=chatIdFor(ph);
+let snap=await db.ref('families/'+ME.familyCode+'/chats/'+id).once('value');
+if(!snap.val()){let co={name:nm,phone:ph,peer:ph}; co.ts=Date.now(); await db.ref('families/'+ME.familyCode+'/chats/'+id).set(co);}
+closeModal();openChat(id,nm);
+}
+function renderChatsList(){
+let el=document.getElementById('viewChats');let ids=Object.keys(myChats);
+if(ids.length===0){el.innerHTML='<p style="padding:20px;text-align:center;color:#888">No chats yet.<br>Tap + to chat with family.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}
+el.innerHTML=ids.map(id=>{let c=myChats[id];return '<div class="item" onclick="openChat(\''+id+'\',\''+(c.name||'Family').replace(/\'/g,"")+'\')"><div class="avatar">'+(c.name?c.name.charAt(0).toUpperCase():'F')+'</div><div style="flex:1"><b>'+(c.name||'Family Chat')+'</b><br><span>Tap to open • Synced ☁️</span></div><span>›</span></div>';}).join('');
+}
+function openChat(id,nm){
+currentChat={id:id,name:nm||'Family'};
+document.getElementById('mainApp').classList.add('hidden');document.getElementById('chatRoom').classList.remove('hidden');
+document.getElementById('chatName').innerText=currentChat.name;document.getElementById('chatAvatar').innerText=currentChat.name.charAt(0).toUpperCase();
+db.ref('families/'+ME.familyCode+'/chats/'+id+'/messages').off();
+db.ref('families/'+ME.familyCode+'/chats/'+id+'/messages').on('value',s=>{renderMessages(s.val()||{});});
+}
+function closeChat(){if(currentChat)db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').off();document.getElementById('chatRoom').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');}
+function renderMessages(obj){
+let box=document.getElementById('chatBox');let arr=Object.values(obj).sort((a,b)=>a.ts-b.ts);
+if(arr.length===0){box.innerHTML='<p style="text-align:center;color:#888;padding:20px">No messages yet.<br>Say hello to '+currentChat.name+'</p>';return;}
+box.innerHTML=arr.map(m=>{let cls=m.from===ME.phone?'me':'other';let media='';if(m.type==='image')media='<img src="'+m.data+'">';if(m.type==='video')media='<video src="'+m.data+'" controls></video>';return '<div class="msg '+cls+'"><b style="font-size:12px;color:#0d47a1">'+(m.from===ME.phone?'You':(m.sender||''))+'</b><br>'+(m.text?m.text:'')+media+'<small>'+new Date(m.ts).toLocaleTimeString()+'</small></div>';}).join('');
+box.scrollTop=box.scrollHeight;
+}
+async function sendMsg(){
+let inp=document.getElementById('chatInput');let t=inp.value.trim();if(!t||!currentChat)return;
+inp.value='';let mo={from:ME.phone,sender:ME.name,text:t}; mo.ts=Date.now(); await db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').push(mo);
+}
+async function sendFile(e){
+let f=e.target.files[0];if(!f||!currentChat)return;if(f.size>900000)return alert('File too big. Use small photo < 900KB.');
+let r=new FileReader();r.onload=async()=>{let ty=f.type.startsWith('video')?'video':'image';let mo={from:ME.phone,sender:ME.name,text:'📎 '+f.name,type:ty,data:r.result}; mo.ts=Date.now(); await db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').push(mo);let lo={name:f.name,type:ty,data:r.result}; lo.ts=Date.now(); await db.ref('families/'+ME.familyCode+'/library').push(lo);alert('Sent + Saved to Family Library • Synced');};r.readAsDataURL(f);
+}
+</script><script>
+function renderCalls(obj){
+let el=document.getElementById('viewCalls');let arr=Object.values(obj).sort((a,b)=>b.ts-a.ts);
+if(arr.length===0){el.innerHTML='<p style="padding:20px;text-align:center;color:#888">No calls yet.</p>';return;}
+el.innerHTML=arr.map(c=>'<div class="item"><div class="avatar">'+(c.type==='video'?'📹':'📞')+'</div><div style="flex:1"><b>'+c.with+'</b><br><span>'+c.type+' • '+c.duration+' • by '+c.by+'</span></div><span>'+new Date(c.ts).toLocaleDateString()+'</span></div>').join('');
+}
+let pc=null,callRef=null;
+async function startVideoCall(){startCall('video');} function startAudioCall(){startCall('audio');}
+async function startCall(type){
+document.getElementById('callScreen').classList.remove('hidden');
+document.getElementById('callTitle').innerText=type==='video'?'📹 Video Call':'📞 Audio Call';
+document.getElementById('callWith').innerText='With '+currentChat.name+' • Family: '+ME.familyName;
+document.getElementById('localVideo').style.display=type==='video'?'block':'none';
+callSec=0;document.getElementById('callTimer').innerText='00:00';
+callInterval=setInterval(()=>{callSec++;let m=String(Math.floor(callSec/60)).padStart(2,'0'),s=String(callSec%60).padStart(2,'0');document.getElementById('callTimer').innerText=m+':'+s;},1000);
+try{
+localStream=await navigator.mediaDevices.getUserMedia({video:type==='video',audio:true});
+if(type==='video')document.getElementById('localVideo').srcObject=localStream;
+pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+pc.ontrack=e=>{let rv=document.getElementById('remoteVideo');rv.style.display='block';rv.srcObject=e.streams[0];};
+callRef=db.ref('families/'+ME.familyCode+'/calls/'+currentChat.id);
+let offer=await pc.createOffer();await pc.setLocalDescription(offer);
+let co={type:type,from:ME.phone,fromName:ME.name,offer:offer,to:currentChat.name,status:'calling'}; co.ts=Date.now(); await callRef.set(co);
+callRef.on('value',async s=>{let v=s.val();if(v&&v.answer&&!pc.currentRemoteDescription){try{await pc.setRemoteDescription(new RTCSessionDescription(v.answer));}catch(e){}}});
+pc.onicecandidate=e=>{if(e.candidate)callRef.child('candidates/'+ME.phone).push(e.candidate.toJSON());};
+callRef.child('candidates').on('child_added',s=>{let cands=s.val();Object.values(cands||{}).forEach(async c=>{try{if(pc&&pc.remoteDescription)await pc.addIceCandidate(new RTCIceCandidate(c));}catch(e){}});});
+}catch(e){alert('Allow Camera / Mic. '+e.message);}
+}
+function toggleMic(){micOn=!micOn;if(localStream)localStream.getAudioTracks().forEach(t=>t.enabled=micOn);document.getElementById('micBtn').innerText=micOn?'🎤':'🔇';}
+function toggleCam(){camOn=!camOn;if(localStream)localStream.getVideoTracks().forEach(t=>t.enabled=camOn);document.getElementById('camBtn').innerText=camOn?'📹':'🚫';}
+async function endCall(){
+clearInterval(callInterval);if(localStream)localStream.getTracks().forEach(t=>t.stop());if(pc)pc.close();
+if(callRef){await db.ref('families/'+ME.familyCode+'/calls/'+currentChat.id).update({status:'ended',duration:document.getElementById('callTimer').innerText});let lo={with:currentChat.name,type:'call',by:ME.name,duration:document.getElementById('callTimer').innerText}; lo.ts=Date.now(); await db.ref('families/'+ME.familyCode+'/calls').push(lo);}
+document.getElementById('callScreen').classList.add('hidden');
+}
+</script><script>
+function setLibFilter(f){
+libFilter=f;
+['all','image','video','music','pdf','doc'].forEach(x=>{let b=document.getElementById('filter'+x.charAt(0).toUpperCase()+x.slice(1));if(b){b.style.background=(x===f)?'#0d47a1':'#e3f2fd';b.style.color=(x===f)?'#fff':'#0d47a1';}});
+renderLibrary(_allLib);
+}
+function openMemberFolder(phone){libSelectedMember=phone;renderLibrary(_allLib);}
+function showAllFolders(){libSelectedMember='all';renderLibrary(_allLib);}
+function openViewer(data,name,type){
+let media='';
+if(type==='image') media='<img src="'+data+'" style="width:100%;border-radius:10px;max-height:60vh;object-fit:contain">';
+else if(type==='video') media='<video src="'+data+'" controls style="width:100%;border-radius:10px"></video>';
+else if(type==='music') media='<div style="text-align:center;padding:20px;font-size:60px">🎵</div><audio src="'+data+'" controls style="width:100%"></audio><p style="text-align:center">'+name+'</p>';
+else if(type==='pdf') media='<iframe src="'+data+'" style="width:100%;height:60vh;border:none;border-radius:10px"></iframe>';
+else media='<div style="text-align:center;padding:30px;font-size:50px">📄</div><p style="text-align:center">'+name+'</p>';
+showModal('<h3>📂 '+name+'</h3>'+media+'<button onclick="saveFile()">💾 SAVE / DOWNLOAD TO PHONE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');
+window._currentFileData=data; window._currentFileName=name;
+}
+function saveFile(){
+let a=document.createElement('a'); a.href=window._currentFileData; a.download=window._currentFileName||'1FML-file';
+document.body.appendChild(a); a.click(); a.remove(); alert('Saved! Check Downloads');
+}
+function renderLibrary(obj){
+_allLib=obj||{};
+let g=document.getElementById('libGrid'); if(!g) return;
+let foldersEl=document.getElementById('libFolders');
+let st=document.getElementById('libStatus');
+let title=document.getElementById('libMemberTitle');
+let byMember={};
+Object.entries(_allLib).forEach(([key,it])=>{
+let owner=it.ownerPhone||it.byPhone||'unknown';
+if(!byMember[owner]) byMember[owner]=[];
+byMember[owner].push({key:key,item:it});
+});
+if(libSelectedMember==='all'){
+if(title) title.innerText='👨‍👩‍👧 All Family Folders - Tap a name to open';
+if(foldersEl){
+let members=Object.values(myMembers);
+if(members.length===0) members=Object.keys(byMember).map(p=>({name:p,phone:p}));
+foldersEl.innerHTML=members.map(m=>{
+let count=(byMember[m.phone]||[]).length;
+let pics=(byMember[m.phone]||[]).filter(x=>x.item.type==='image').length;
+let vids=(byMember[m.phone]||[]).filter(x=>x.item.type==='video').length;
+let mus=(byMember[m.phone]||[]).filter(x=>x.item.type==='music').length;
+let docs=(byMember[m.phone]||[]).filter(x=>x.item.type==='pdf'||x.item.type==='doc').length;
+return '<div class="item" onclick="openMemberFolder(\''+m.phone+'\')"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>📁 '+m.name+' Folder</b><br><span>'+count+' files • 🖼️ '+pics+' • 🎬 '+vids+' • 🎵 '+mus+' • 📄 '+docs+'</span><br><span style="color:#1565c0;font-size:12px">Tap to Open →</span></div><span style="font-size:22px">›</span></div>';
+}).join('');
+}
+if(st) st.innerText=Object.keys(_allLib).length+' total files in family • Each member has own folder';
+let allItems=Object.entries(_allLib).map(([k,v])=>({key:k,item:v}));
+showLibGrid(allItems,g); return;
+}
+let member=myMembers[libSelectedMember]||{name:libSelectedMember,phone:libSelectedMember};
+if(title) title.innerHTML='📁 <b>'+member.name+' Folder</b> <button onclick="showAllFolders()" style="width:auto;padding:6px 10px;background:#eee;color:#333;border:none;border-radius:8px;font-size:12px">← Back to All Folders</button>';
+if(foldersEl) foldersEl.innerHTML='<p style="padding:10px;background:#e3f2fd;border-radius:8px">Showing <b>'+member.name+'</b> only • Pictures, Videos, Music, Documents in this folder • Filter: '+libFilter+'</p>';
+let items=(byMember[libSelectedMember]||[]);
+if(st) st.innerText=member.name+' has '+items.length+' files';
+showLibGrid(items,g);
+}
+function showLibGrid(items,g){
+let filtered=items.filter(({item})=>{
+if(libFilter==='all') return true;
+if(libFilter==='pdf') return item.type==='pdf'||item.type==='doc';
+return item.type===libFilter;
+});
+if(filtered.length===0){g.innerHTML='<p style="grid-column:1/3;text-align:center;color:#888;padding:20px">No files here yet in this filter.<br>Tap Add to add to YOUR folder.</p>';return;}
+filtered.sort((a,b)=>(b.item.ts||0)-(a.item.ts||0));
+g.innerHTML=filtered.map(({key,it})=>{
+let thumb='';
+if(it.type==='image') thumb='<img src="'+it.data+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px">';
+else if(it.type==='video') thumb='<div style="position:relative"><video src="'+it.data+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#000"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30px">▶️</span></div>';
+else if(it.type==='music') thumb='<div style="height:150px;background:#e8f5e9;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:40px">🎵</span><b style="font-size:12px">MUSIC</b><audio src="'+it.data+'" controls style="width:90%;margin-top:6px"></audio></div>';
+else if(it.type==='pdf') thumb='<div style="height:150px;background:#e3f2fd;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:40px">📕</span><b style="font-size:12px;color:#0d47a1">PDF</b></div>';
+else thumb='<div style="height:150px;background:#fff3e0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:40px">📄</span><b style="font-size:12px">DOC</b></div>';
+return '<div style="position:relative;cursor:pointer" onclick="openViewerById(\''+key+'\')">'+thumb+'<div style="background:#fff;padding:6px;border-radius:0 0 10px 10px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+(it.name||'File')+'<br><span style="color:#666">By: '+(it.by||'')+'</span><br><span style="color:#1565c0">Tap to Open • 💾 Save</span></div></div>';
+}).join('');
+window._libData=_allLib;
+}
+function openViewerById(key){let it=window._libData[key]; if(!it) return; openViewer(it.data,it.name,it.type);}
+async function addToLibrary(e){
+let f=e.target.files[0]; if(!f) return; if(f.size>900000) return alert('File too big. Use < 900KB. For NRC, take clear photo.');
+let r=new FileReader(); r.onload=async()=>{
+let ty='doc';
+if(f.type.startsWith('image')) ty='image';
+else if(f.type.startsWith('video')) ty='video';
+else if(f.type.startsWith('audio') || f.name.toLowerCase().endsWith('.mp3')) ty='music';
+else if(f.type==='application/pdf' || f.name.toLowerCase().endsWith('.pdf')) ty='pdf';
+let lo={name:f.name,type:ty,data:r.result,[STRIPPED]
+lo.ts=Date.now();
+await db.ref('families/'+ME.familyCode+'/library').push(lo);
+alert('Added to YOUR Folder ('+ME.name+')! Family can tap your name to see it ☁️ File: '+f.name);
+}; r.readAsDataURL(f);
+}
+function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(()=>console.log('1FML Ready')).catch(()=>{});});}
+</script>
+</body>
+</html>
