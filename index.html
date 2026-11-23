@@ -175,26 +175,34 @@ function openViewerById(key){let it=window._libData[key];if(!it)return;openViewe
 async function addToLibrary(e){
   let f = e.target.files[0];
   if(!f) return;
-  alert('Uploading '+f.name+'... Please wait, do NOT close');
-  if(f.size > 20*1024*1024) return alert('Max 20MB');
+  alert('Picked: '+f.name+' - Saving now, wait...');
+  if(f.size > 20*1024*1024) return alert('Max 20MB - pick a smaller file');
   let st = document.getElementById('libStatus');
-  if(st) st.innerText = 'Uploading '+f.name+'... Do NOT close';
-  try{
-    let url = await uploadToCloudinary(f);
-    let ty = getFileType(f);
-    await db.ref('families/'+ME.familyCode+'/library').push({name:f.name, type:ty, data:url, by:ME.phone, fromName:ME.name, ownerPhone:ME.phone, ts:Date.now()});
-    if(st) st.innerText = '✅ Saved! '+f.name;
-    alert('Added to YOUR Folder!');
-    if(typeof renderLibrary === 'function') renderLibrary(_allLib);
-  }catch(err){
-    alert('Upload failed: '+err.message);
-  }
+  if(st) st.innerText = 'Saving '+f.name+'...';
+  let reader = new FileReader();
+  reader.onload = async function(){
+    try{
+      let dataUrl = reader.result;
+      let ty = getFileType(f);
+      await db.ref('families/'+ME.familyCode+'/library').push({
+        name: f.name,
+        type: ty,
+        data: dataUrl,
+        by: ME.phone,
+        fromName: ME.name,
+        ownerPhone: ME.phone,
+        ts: Date.now()
+      });
+      alert('✅ Added to YOUR Folder!');
+      if(st) st.innerText = '✅ Saved! '+f.name;
+    }catch(err){
+      alert('Save failed: '+err.message);
+    }
+  };
+  reader.onerror = function(){ alert('Could not read file'); };
+  reader.readAsDataURL(f);
   e.target.value = '';
 }
-document.addEventListener('DOMContentLoaded', function(){
-  let inp = document.getElementById('libFile2');
-  if(inp) inp.addEventListener('change', addToLibrary);
-});
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden');}
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 function saveFile(){downloadFile(window._curData,window._curName);}
