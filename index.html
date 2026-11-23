@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>1FML - Family Connect</title>
 <meta name="theme-color" content="#0d47a1"><meta name="mobile-web-app-capable" content="yes">
@@ -151,4 +152,8 @@ async function addToLibrary(e){let f=e.target.files[0];if(!f)return;if(f.size>20
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden');}
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 function saveFile(){downloadFile(window._curData,window._curName);}
+</script><script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 </script></body></html>
