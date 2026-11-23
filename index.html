@@ -66,7 +66,7 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 <div id="viewCalls" class="list hidden"></div>
 <div id="viewLibrary" class="hidden"><div class="libCard"><b style="font-size:13px">📁 Family Folders - SYNCED ☁️</b><br><span style="font-size:12px;color:#666">All files from all family members. Tap a file to view & download.</span>
 <div style="margin-top:8px"><button onclick="setLibFilter('all')" id="filterAll" class="filterBtn on">All</button><button onclick="setLibFilter('image')" id="filterImage" class="filterBtn off">🖼️ Pictures</button><button onclick="setLibFilter('video')" id="filterVideo" class="filterBtn off">🎬 Videos</button><button onclick="setLibFilter('music')" id="filterMusic" class="filterBtn off">🎵 Music</button><button onclick="setLibFilter('pdf')" id="filterPdf" class="filterBtn off">📄 Docs</button></div>
-<button onclick="document.getElementById('libFile2').click()" style="display:block;width:100%;background:#1565c0;color:#fff;padding:10px;border:none;border-radius:8px;margin-top:10px;cursor:pointer;font-size:13px">📂 Add to MY Folder (Max 20MB)</button>
+<button onclick="openLibPicker()" style="display:block;width:100%;background:#1565c0;color:#fff;padding:10px;border:none;border-radius:8px;margin-top:10px;cursor:pointer;font-size:13px">📂 Add to MY Folder (Max 20MB)</button>
 <input type="file" id="libFile2" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.mp3,.mp4" style="display:none">
 <div id="libStatus" class="small"></div><div id="libMemberTitle" style="font-weight:700;color:#0d47a1;margin-top:8px;font-size:13px"></div></div>
 <div id="libFolders"></div><div id="libGrid" class="libGrid"></div></div>
@@ -209,5 +209,13 @@ function saveFile(){downloadFile(window._curData,window._curName);}
 </script><script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
+}
+function openLibPicker(){
+  let inp = document.getElementById('libFile2');
+  inp.onchange = function(e){
+    alert('PICKED! Saving now...');
+    addToLibrary(e);
+  };
+  inp.click();
 }
 </script></body></html>
