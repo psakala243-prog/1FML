@@ -111,7 +111,30 @@ function showMyCode(){alert('Family: '+ME.familyName+'\nCode: '+ME.familyCode);}
 function openSettings(){showModal('<h3 style="font-size:15px">⚙️ Settings</h3><p style="font-size:13px">Name: '+ME.name+'<br>Phone: '+ME.phone+'<br>Family: '+ME.familyName+'</p><label>Change Name</label><input id="setName" value="'+ME.name+'"><button onclick="saveSettings()">SAVE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');}
 async function saveSettings(){ME.name=document.getElementById('setName').value.trim()||ME.name;await db.ref('users/'+ME.phone).set(ME);await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).set(ME);saveMe();alert('Saved');closeModal();enterApp();}
 async function doBackup(){let snap=await db.ref('families/'+ME.familyCode).once('value');let b=new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='1FML-Backup-'+ME.familyCode+'.json';a.click();alert('Backup Downloaded!');}
-function switchTab(t){['chats','calls','library','members'].forEach(x=>{let el=document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1));if(el)el.style.display=(x===t?'block':'none');let tb=document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1));if(tb)tb.classList.toggle('active',x===t);});if(t==='calls')renderCalls();if(t==='chats')renderChatsList();if(t==='members')renderMembers();}
+function switchTab(t){
+  // Normalize: family = members
+  if(t === 'family') t = 'members';
+  if(t === 'member') t = 'members';
+
+  // Hide all views
+  ['chats','calls','library','members'].forEach(x => {
+    let view = document.getElementById('view' + x.charAt(0).toUpperCase() + x.slice(1));
+    let tab = document.getElementById('tab' + x.charAt(0).toUpperCase() + x.slice(1));
+    if(view) view.classList.add('hidden');
+    if(tab) tab.classList.remove('active');
+  });
+
+  // Show the one tapped + RE-RENDER it
+  let activeView = document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1));
+  let activeTab = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+  if(activeView) activeView.classList.remove('hidden');
+  if(activeTab) activeTab.classList.add('active');
+
+  if(t === 'calls') renderCalls();
+  if(t === 'library') renderLibrary();
+  if(t === 'members') renderMembers();
+  if(t === 'chats') renderChats();
+    }
 function showLibrary(){switchTab('library');}
 function renderMembers(){let list=Object.values(myMembers);let el=document.getElementById('viewMembers');if(!list.length){el.innerHTML='<p style="padding:20px;text-align:center">No members yet.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}el.innerHTML='<p style="padding:10px;font-size:13px"><b>'+ME.familyName+'</b> - '+list.length+' member(s)</p>'+list.map(m=>'<div class="item" onclick="openMemberFolderFromMembers(\''+m.phone+'\')"><div class="avatar">'+m.name.charAt(0).toUpperCase()+'</div><div style="flex:1"><b>'+m.name+'</b><br><span>'+m.phone+' • '+m.email+'</span><br><span style="color:#1565c0">📁 Tap to Open Folder →</span></div><span>'+(m.phone===ME.phone?'YOU':'›')+'</span></div>').join('');}
 function openMemberFolderFromMembers(phone){libSelectedMember=phone;switchTab('library');renderLibrary(_allLib);}
