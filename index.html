@@ -66,7 +66,8 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 <div id="viewCalls" class="list hidden"></div>
 <div id="viewLibrary" class="hidden"><div class="libCard"><b style="font-size:13px">📁 Family Folders - SYNCED ☁️</b><br><span style="font-size:12px;color:#666">All files from all family members. Tap a file to view & download.</span>
 <div style="margin-top:8px"><button onclick="setLibFilter('all')" id="filterAll" class="filterBtn on">All</button><button onclick="setLibFilter('image')" id="filterImage" class="filterBtn off">🖼️ Pictures</button><button onclick="setLibFilter('video')" id="filterVideo" class="filterBtn off">🎬 Videos</button><button onclick="setLibFilter('music')" id="filterMusic" class="filterBtn off">🎵 Music</button><button onclick="setLibFilter('pdf')" id="filterPdf" class="filterBtn off">📄 Docs</button></div>
-<label style="display:block;background:#1565c0;color:#fff;padding:10px;text-align:center;border-radius:8px;margin-top:10px;cursor:pointer;font-size:13px">📂 Add to MY Folder (Max 20MB)<input type="file" id="libFile" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.mp3,.mp4" style="display:none" onchange="addToLibrary(event)"></label>
+<button onclick="document.getElementById('libFile2').click()" style="display:block;width:100%;background:#1565c0;color:#fff;padding:10px;border:none;border-radius:8px;margin-top:10px;cursor:pointer;font-size:13px">📂 Add to MY Folder (Max 20MB)</button>
+<input type="file" id="libFile2" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.mp3,.mp4" style="display:none">
 <div id="libStatus" class="small"></div><div id="libMemberTitle" style="font-weight:700;color:#0d47a1;margin-top:8px;font-size:13px"></div></div>
 <div id="libFolders"></div><div id="libGrid" class="libGrid"></div></div>
 <div id="viewMembers" class="list hidden"></div><button class="fab" onclick="openNewChat()">+</button></div>
@@ -171,7 +172,29 @@ function openViewer(data,name,type){let media='';if(type==='image')media='<img s
 function renderLibrary(obj){if(obj)_allLib=obj; if(!_allLib)_allLib={};
 function showLibGrid(items,g){let filtered=items.filter(({item})=>{if(libFilter==='all')return true;if(libFilter==='pdf')return item.type==='pdf'||item.type==='doc';return item.type===libFilter;});if(!filtered.length){g.innerHTML='<p style="grid-column:1/3;text-align:center;color:#888;padding:20px">No files here yet.<br>Tap Add to add to YOUR folder.</p>';return;}filtered.sort((a,b)=>(b.item.ts||0)-(a.item.ts||0));g.innerHTML=filtered.map(({key,it})=>{let thumb='';if(it.type==='image')thumb='<img src="'+it.data+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px">';else if(it.type==='video')thumb='<div style="position:relative"><video src="'+it.data+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px;background:#000"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px">▶️</span></div>';else if(it.type==='music')thumb='<div style="height:140px;background:#e8f5e9;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:36px">🎵</span><audio src="'+it.data+'" controls style="width:90%"></audio></div>';else if(it.type==='pdf')thumb='<div style="height:140px;background:#e3f2fd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px">📕</div>';else thumb='<div style="height:140px;background:#fff3e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px">📄</div>';return '<div style="cursor:pointer" onclick="openViewerById(\''+key+'\')">'+thumb+'<div style="background:#fff;padding:6px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+(it.name||'File')+'<br><span style="color:#666">By: '+(it.by||'')+'</span><br><button class="dlBtn" onclick="event.stopPropagation();downloadFile(\''+it.data+'\',\''+(it.name||'file').replace(/\'/g,"")+'\')">⬇️ DOWNLOAD</button></div></div>';}).join('');window._libData=_allLib;}
 function openViewerById(key){let it=window._libData[key];if(!it)return;openViewer(it.data,it.name,it.type);}
-async function addToLibrary(e){let f=e.target.files[0];if(!f)return;if(f.size>20*1024*1024)return alert('Max 20MB');let st=document.getElementById('libStatus');if(st)st.innerText='Uploading '+f.name+'... Do NOT close';try{let url=await uploadToCloudinary(f);let ty=getFileType(f);await db.ref('families/'+ME.familyCode+'/library').push({name:f.name,type:ty,data:url,by:ME.name,ownerPhone:ME.phone,ownerName:ME.name,ts:Date.now()});if(st)st.innerText='✅ Saved! '+f.name;alert('Added to YOUR Folder!');}catch(err){alert('Upload failed: '+err.message);}e.target.value='';}
+async function addToLibrary(e){
+  let f = e.target.files[0];
+  if(!f) return;
+  alert('Uploading '+f.name+'... Please wait, do NOT close');
+  if(f.size > 20*1024*1024) return alert('Max 20MB');
+  let st = document.getElementById('libStatus');
+  if(st) st.innerText = 'Uploading '+f.name+'... Do NOT close';
+  try{
+    let url = await uploadToCloudinary(f);
+    let ty = getFileType(f);
+    await db.ref('families/'+ME.familyCode+'/library').push({name:f.name, type:ty, data:url, by:ME.phone, fromName:ME.name, ownerPhone:ME.phone, ts:Date.now()});
+    if(st) st.innerText = '✅ Saved! '+f.name;
+    alert('Added to YOUR Folder!');
+    if(typeof renderLibrary === 'function') renderLibrary(_allLib);
+  }catch(err){
+    alert('Upload failed: '+err.message);
+  }
+  e.target.value = '';
+}
+document.addEventListener('DOMContentLoaded', function(){
+  let inp = document.getElementById('libFile2');
+  if(inp) inp.addEventListener('change', addToLibrary);
+});
 function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modal').classList.remove('hidden');}
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 function saveFile(){downloadFile(window._curData,window._curName);}
