@@ -43,8 +43,10 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 .voiceBar{background:#fff;border-radius:10px;padding:8px;display:flex;gap:6px;align-items:center}
 </style></head><body>
 <div id="authPage" class="auth"><h1>💙 1FML</h1><p>Family Connect • Real Sync • Up to 20MB</p>
-<div id="regBox"><input id="regName" placeholder="Full Name"><input id="regPhone" placeholder="Phone e.g. 0977399807"><input id="regEmail" placeholder="Email" type="email"><input id="regPass" placeholder="Create Password" type="password"><button onclick="register()">REGISTER → NEXT</button></div>
-<div id="loginBox" class="hidden"><input id="loginPhone" placeholder="Phone Number e.g. 0977399807"><input id="loginPass" placeholder="Password" type="password"><button onclick="login()">LOGIN</button></div>
+<input id="regName" placeholder="Full Name" autocomplete="name" type="text">
+<input id="regPhone" placeholder="Phone e.g. 0977399807" autocomplete="tel" type="tel">
+<input id="regEmail" placeholder="Email" autocomplete="email" type="email">
+<input id="regPass" placeholder="Create Password" autocomplete="new-password" type="password">
 <div style="margin-top:12px;text-align:center">
 <button onclick="document.getElementById('regBox').style.display='none';document.getElementById('loginBox').style.display='block';document.getElementById('toggleText2').style.display='block';this.style.display='none';" style="width:100%;padding:12px;background:#fff;color:#0d47a1;border:2px solid #0d47a1;border-radius:8px;font-weight:700;font-size:14px">👉 ALREADY REGISTERED? TAP HERE TO LOGIN 👈</button>
 <div id="toggleText2" style="display:none;margin-top:10px;color:#0d47a1;cursor:pointer" onclick="document.getElementById('regBox').style.display='block';document.getElementById('loginBox').style.display='none';this.style.display='none';">⬅ Back to Register</div>
@@ -104,7 +106,29 @@ function updateLibBadge(){let c=getUnseenLibCount();let b=document.getElementByI
 function markLibrarySeen(){Object.keys(_allLib).forEach(k=>{seenLibMap[k]=true;});saveSeenLib();updateLibBadge();renderLibrary(_allLib);}
 function showMsgPopup(fromName,text,chatId,chatName){let o=document.getElementById('msgPopup');if(o)o.remove();let d=document.createElement('div');d.id='msgPopup';d.style.cssText='position:fixed;top:58px;left:10px;right:10px;z-index:9999;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);padding:12px;display:flex;gap:10px;align-items:center;';d.innerHTML='<div style="width:38px;height:38px;border-radius:50%;background:#1565c0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">'+(fromName||'?').charAt(0)+'</div><div style="flex:1"><b style="font-size:13px">'+fromName+'</b><br><span style="color:#555;font-size:12px">'+(text||'Sent a file').slice(0,60)+'</span></div><span>›</span>';d.onclick=function(){d.remove();openChat(chatId,chatName);};document.body.appendChild(d);setTimeout(()=>{if(d)d.remove();},6000);try{new Audio('https://actions.google.com/sounds/v1/notifications/new_message.ogg').play().catch(()=>{});}catch(e){}if('Notification' in window&&Notification.permission==='granted'){try{new Notification('1FML - '+fromName,{body:text||'Sent a file'});}catch(e){}}}
 function watchAllChats(){if(!ME||!ME.familyCode)return;db.ref('families/'+ME.familyCode+'/chats').on('value',s=>{let chats=s.val()||{};Object.keys(chats).forEach(chatId=>{if(msgListeners[chatId])return;msgListeners[chatId]=true;let firstLoad=true;db.ref('families/'+ME.familyCode+'/chats/'+chatId+'/messages').on('value',ms=>{let obj=ms.val()||{};let msgs=Object.values(obj).sort((a,b)=>a.ts-b.ts);allMsgs[chatId]=msgs;let last=msgs[msgs.length-1];if(!firstLoad && last && last.ts>(lastReadMap[chatId]||0) && last.from!==ME.phone){if(!currentChat||currentChat.id!==chatId){let c=getUnreadCountForChat(chatId);unreadMap[chatId]=c;saveUnread();updateUnreadBadge();renderChatsList();showMsgPopup(last.sender||'Family',last.text||'🎤 Voice note',chatId,(chats[chatId]||{}).name||'Family');}}else{let c=getUnreadCountForChat(chatId);if(unreadMap[chatId]!==c){unreadMap[chatId]=c;saveUnread();}}firstLoad=false;updateUnreadBadge();renderChatsList();});});});}
-function toggleAuth(){let r=document.getElementById('regBox').classList.contains('hidden');document.getElementById('regBox').classList.toggle('hidden',!r);document.getElementById('loginBox').classList.toggle('hidden',r);document.getElementById('toggleText').innerText=r?'Already registered? Click to Login':'New? Click to Register';}
+function toggleAuth(){let isReg=document.getElementById('regBox').classList.contains('hidden');document.getElementById('regBox').classList.toggle('hidden',!isReg);document.getElementById('loginBox').classList.toggle('hidden',isReg);document.getElementById('toggleText').innerText=isReg?'Already registered? Click to Login':'New? Click to Register';}
+async function register(){
+try{
+let n=document.getElementById('regName').value.trim(),p=cleanPhone(document.getElementById('regPhone').value),e=document.getElementById('regEmail').value.trim(),pw=document.getElementById('regPass').value.trim();
+if(!n||!p||!e||!pw)return alert('Fill all: Name, Phone, Email, Password');
+if(!e.includes('@'))return alert('Enter valid Email');
+if(pw.length<4)return alert('Password must be 4+ characters');
+alert('Registering... please wait');
+ME={name:n,phone:p,email:e,pass:pw,familyCode:'',familyName:''};
+await db.ref('users/'+p).set(ME); saveMe(); alert('Registered! Now create or join your Family'); showFamilyPage();
+}catch(err){alert('REGISTER FAILED: '+err.message+' - Check internet / Firebase Rules');}
+}
+async function login(){
+try{
+let p=cleanPhone(document.getElementById('loginPhone').value),pw=document.getElementById('loginPass').value.trim();
+if(!p||!pw)return alert('Enter Phone + Password');
+alert('Logging in... please wait');
+let snap=await db.ref('users/'+p).once('value'); let u=snap.val();
+if(!u)return alert('No account with this Phone. Tap New? Click to Register first');
+if(u.pass!==pw)return alert('Wrong Password for this Phone');
+ME=u; saveMe(); alert('Welcome back '+ME.name); if(ME.familyCode)enterApp(); else showFamilyPage();
+}catch(err){alert('LOGIN FAILED: '+err.message);}
+}
 function cleanCode(c){return c.trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');}
 function cleanPhone(p){return (p||'').replace(/[^0-9]/g,'');}
 function getFileType(f){if(f.type.startsWith('image'))return 'image';if(f.type.startsWith('video'))return 'video';if(f.type.startsWith('audio')||f.name.toLowerCase().endsWith('.mp3'))return 'music';if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'))return 'pdf';return 'doc';}
