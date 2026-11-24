@@ -444,4 +444,50 @@ function showMyCode(){alert('Family: '+ME.familyName+'\nCode: '+ME.familyCode);}
 function setLibFilter(f){libFilter=f;['all','image','video','music','pdf'].forEach(function(x){var b=document.getElementById('filter'+x.charAt(0).toUpperCase()+x.slice(1));if(b)b.className='filterBtn '+(x===f?'on':'off');});renderLibrary(_allLib);}
 function openMemberFolder(phone){libSelectedMember=phone;renderLibrary(_allLib);}
 function showAllFolders(){libSelectedMember='all';renderLibrary(_allLib);}
-<!-- END PART 4B -->
+<!-- END PART 4B -->async function downloadFile(url,name){try{var r=await fetch(url);var b=await r.blob();var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name||'1FML-file';a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},5000);}catch(e){window.open(url,'_blank');}}
+function openViewer(data,name,type){
+var media='';if(type==='image')media='<img src="'+data+'" style="width:100%;border-radius:10px;max-height:55vh;object-fit:contain">';else if(type==='video')media='<video src="'+data+'" controls style="width:100%;border-radius:10px"></video>';else if(type==='music')media='<div style="text-align:center;font-size:50px">🎵</div><audio src="'+data+'" controls style="width:100%"></audio>';else if(type==='pdf')media='<iframe src="'+data+'" style="width:100%;height:55vh;border:none"></iframe>';else media='<div style="text-align:center;font-size:40px">📄</div><p style="text-align:center">'+name+'</p>';
+showModal('<h3 style="font-size:16px">'+cleanName(name)+'</h3>'+media+'<button onclick="downloadFile(window._curData,window._curName)" style="background:#25D366">DOWNLOAD TO PHONE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');window._curData=data;window._curName=name;
+}
+function renderLibrary(obj){
+if(obj)_allLib=obj;if(!_allLib)_allLib={};
+var title=document.getElementById('libMemberTitle');if(title){if(libSelectedMember==='all')title.innerText='All Family Folders';else{var m=familyMembers&&familyMembers[libSelectedMember];title.innerText='Folder: '+(m?m.name:libSelectedMember)+' - Tap to see all';title.onclick=function(){showAllFolders();};title.style.cursor='pointer';}}
+var foldersEl=document.getElementById('libFolders');if(foldersEl){var byMember={};Object.entries(_allLib).forEach(function(kv){var it=kv[1];var p=it.ownerPhone||it.by||'unknown';if(!byMember[p])byMember[p]=0;byMember[p]++;});var phones=Object.keys(byMember);if(libSelectedMember==='all'&&phones.length){var fh='<div style="padding:0 10px 4px;display:flex;gap:6px;flex-wrap:wrap">';phones.forEach(function(p){var mm=familyMembers&&familyMembers[p];var nm=mm?mm.name:p;fh+='<button onclick="openMemberFolder(\''+p+'\')" style="background:#fff;border:1px solid #ddd;padding:8px 10px;border-radius:20px;font-size:13px">Folder '+nm+' ('+byMember[p]+')</button>';});fh+='</div>';foldersEl.innerHTML=fh;}else{foldersEl.innerHTML='';}}
+var items=Object.entries(_allLib).map(function(kv){return {key:kv[0],it:kv[1]};});if(libSelectedMember!=='all'){items=items.filter(function(row){return (row.it.ownerPhone||row.it.by)===libSelectedMember;});}
+var grid=document.getElementById('libGrid');if(grid)showLibGrid(items,grid);
+}
+function showLibGrid(items,g){
+var filtered=items.filter(function(row){if(libFilter==='all')return true;if(libFilter==='pdf')return row.it.type==='pdf'||row.it.type==='doc';return row.it.type===libFilter;});
+if(!filtered.length){g.innerHTML='<p style="grid-column:1/3;text-align:center;color:#888;padding:20px">No files here yet.<br>Tap Add to add to YOUR folder.</p>';return;}
+filtered.sort(function(a,b){return (b.it.ts||0)-(a.it.ts||0);});var h='';
+filtered.forEach(function(row){var key=row.key;var it=row.it;var thumb='';
+if(it.type==='image')thumb='<img src="'+it.data+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px">';
+else if(it.type==='video')thumb='<div style="position:relative"><video src="'+it.data+'" style="width:100%;height:140px;object-fit:cover;border-radius:8px;background:#000"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px">▶️</span></div>';
+else if(it.type==='music')thumb='<div style="height:140px;background:#e8f5e9;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:36px">🎵</span><audio src="'+it.data+'" controls style="width:90%"></audio></div>';
+else if(it.type==='pdf')thumb='<div style="height:140px;background:#e3f2fd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px">📕</div>';
+else thumb='<div style="height:140px;background:#fff3e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px">📄</div>';
+h+='<div style="position:relative;background:#fff;border-radius:10px;overflow:hidden;padding-bottom:6px" onclick="openViewerById(\''+key+'\')">'+thumb+'<div style="padding:6px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cleanName(it.name||'File')+'<br><span style="color:#666">By: '+(it.by||'')+'</span></div></div>';});
+g.innerHTML=h;
+}
+function openViewerById(key){var it=_allLib[key];if(!it)return;openViewer(it.data,it.name,it.type);}
+async function addToLibrary(e){
+var f=e.target.files[0];if(!f)return;if(!ME.familyCode)return alert('Join or Create a Family first to use Library');
+alert('Picked: '+f.name+' - Saving now, wait...');if(f.size>20*1024*1024)return alert('Max 20MB');
+var st=document.getElementById('libStatus');if(st)st.innerText='Saving '+f.name+'...';
+try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('families/'+ME.familyCode+'/library').push({name:f.name,type:ty,data:url,by:ME.name,ownerPhone:ME.phone,ownerName:ME.name,ts:Date.now()});if(st)st.innerText='Saved: '+f.name;alert('Added to Family Library: '+f.name);}catch(err){alert('Library upload failed: '+err.message);}
+}
+<!-- END PART 4C-1 -->function openMyProfile(){
+var photo=ME.photo?'<img src="'+ME.photo+'" class="profilePic">':'<div class="profilePic" style="display:flex;align-items:center;justify-content:center;font-size:36px">👤</div>';
+showModal('<h3 style="font-size:16px">My Profile</h3>'+photo+'<p style="text-align:center;font-weight:700;margin:8px 0">'+ME.name+'</p><p style="text-align:center;color:#666;font-size:13px">'+ME.phone+'</p><label>Profile Picture</label><input type="file" id="profilePicInput" accept="image/*" onchange="changeProfilePic(event)"><label>Status</label><input id="profileStatus" value="'+(ME.status||'').replace(/"/g,'')+'" placeholder="e.g. Available"><button onclick="saveProfile()">SAVE PROFILE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');
+}
+async function changeProfilePic(e){var f=e.target.files[0];if(!f)return;alert('Uploading your photo...');try{var url=await uploadToCloudinary(f);ME.photo=url;await db.ref('users/'+ME.phone).update({photo:url});if(ME.familyCode)await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).update({photo:url});saveMe();updateMyTopPic();openMyProfile();alert('Profile picture updated');}catch(err){alert('Photo failed: '+err.message);}}
+async function saveProfile(){var st=document.getElementById('profileStatus').value.trim()||'Hey there! I am using 1FML';ME.status=st;await db.ref('users/'+ME.phone).update({status:st});if(ME.familyCode)await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).update({status:st});saveMe();alert('Profile saved');closeModal();renderChatsList();}
+function openSettings(){showModal('<h3 style="font-size:16px">Settings</h3><p style="font-size:14px">Name: '+ME.name+'<br>Phone: '+ME.phone+'<br>Family: '+(ME.familyName||'None')+'</p><label>Change Name</label><input id="setName" value="'+ME.name+'"><label>Status</label><input id="setStatus" value="'+(ME.status||'')+'"><button onclick="saveSettings()">SAVE</button><button class="closeBtn" onclick="closeModal()">CLOSE</button>');}
+async function saveSettings(){ME.name=document.getElementById('setName').value.trim()||ME.name;ME.status=document.getElementById('setStatus').value.trim()||ME.status;await db.ref('users/'+ME.phone).set(ME);if(ME.familyCode)await db.ref('families/'+ME.familyCode+'/members/'+ME.phone).set(ME);saveMe();alert('Saved');closeModal();enterApp();}
+async function doBackup(){var snap=await db.ref('users/'+ME.phone).once('value');var b=new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='1FML-Backup-'+ME.phone+'.json';a.click();alert('Backup Downloaded!');}
+function openLibPicker(){var inp=document.getElementById('libFile2');inp.onchange=function(e){addToLibrary(e);};inp.click();}
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});}
+</script>
+</body>
+</html>
+<!-- END ALL PARTS - NOW COMMIT -->
