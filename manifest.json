@@ -2,18 +2,21 @@
   "name": "1FML - Family Messenger",
   "short_name": "1FML",
   "description": "Family messenger for calls, messages and notifications for the whole family.",
-  "start_url": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "orientation": "any",
+  "background_color": "#0d47a1",
+  "theme_color": "#0d47a1",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/4436/4436481.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/4436/4436481.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
