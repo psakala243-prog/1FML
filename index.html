@@ -486,7 +486,7 @@ var b=new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'});
 var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='1FML-Backup-'+ME.familyCode+'.json';a.click();alert('Backup Downloaded!');
 }
 function openLibPicker(){var inp=document.getElementById('libFile2');inp.onchange=function(e){addToLibrary(e);};inp.click();}
-if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});}
 </script>
 </body>
 </html>
