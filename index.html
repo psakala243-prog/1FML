@@ -45,7 +45,10 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 <div id="authPage" class="auth"><h1>💙 1FML</h1><p>Family Connect • Real Sync • Up to 20MB</p>
 <div id="regBox"><input id="regName" placeholder="Full Name"><input id="regPhone" placeholder="Phone e.g. 0977399807"><input id="regEmail" placeholder="Email" type="email"><input id="regPass" placeholder="Create Password" type="password"><button onclick="register()">REGISTER → NEXT</button></div>
 <div id="loginBox" class="hidden"><input id="loginPhone" placeholder="Phone Number e.g. 0977399807"><input id="loginPass" placeholder="Password" type="password"><button onclick="login()">LOGIN</button></div>
-<div class="link" onclick="toggleAuth()" id="toggleText">Already registered? Click to Login</div><p class="small">Login uses PHONE + Password, not Email</p></div>
+<div style="margin-top:12px;text-align:center">
+<button onclick="document.getElementById('regBox').style.display='none';document.getElementById('loginBox').style.display='block';document.getElementById('toggleText2').style.display='block';this.style.display='none';" style="width:100%;padding:12px;background:#fff;color:#0d47a1;border:2px solid #0d47a1;border-radius:8px;font-weight:700;font-size:14px">👉 ALREADY REGISTERED? TAP HERE TO LOGIN 👈</button>
+<div id="toggleText2" style="display:none;margin-top:10px;color:#0d47a1;cursor:pointer" onclick="document.getElementById('regBox').style.display='block';document.getElementById('loginBox').style.display='none';this.style.display='none';">⬅ Back to Register</div>
+</div>
 <div id="familyPage" class="auth hidden"><h1>👨‍👩‍👧‍👦 My Family</h1><p id="welcomeFamily"></p>
 <b style="font-size:13px">Option 1: I am FIRST in my family</b><input id="familyName" placeholder="Family Name e.g. SAKALA FAMILY"><button onclick="createFamily()">CREATE MY FAMILY + GET CODE</button><p style="margin:10px 0;text-align:center"><b>OR</b></p><b style="font-size:13px">Option 2: My family already has a Code</b><input id="joinCode" placeholder="Enter Family Code" style="text-transform:uppercase"><button onclick="joinFamily()">JOIN MY FAMILY WITH CODE</button><div id="myCodeResult"></div></div>
 <div id="mainApp" class="hidden">
