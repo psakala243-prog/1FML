@@ -17,7 +17,12 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 .codeBox{background:#e3f2fd;border:2px dashed #0d47a1;padding:12px;border-radius:10px;text-align:center;margin:10px 0}
 .codeBox b{font-size:20px;color:#0d47a1;word-break:break-all}
 .list{background:#fff;min-height:70vh}.item{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0;align-items:center;cursor:pointer}
-.avatar{width:42px;height:42px;min-width:42px;border-radius:50%;background:#1565c0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar{width:42px;height:42px;min-width:42px;border-radius:50%;background:#1565c0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;overflow:hidden;position:relative;flex-shrink:0}.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar .dot{position:absolute;bottom:1px;right:1px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:#22c55e}
+.avatar.offline .dot{background:#94a3b8}
+.tick{font-size:11px;color:#94a3b8;margin-left:4px}.tick.read{color:#2563eb}
+.date-line{text-align:center;margin:12px 0}.date-line span{background:#e2e8f0;color:#64748b;font-size:11px;padding:4px 12px;border-radius:20px}
+.typing{font-size:12px;color:#16a34a;font-style:italic;padding:2px 10px}
 .item b{font-size:13px}.item span{font-size:12px;color:#666}
 .chatHead{background:#0d47a1;color:#fff;padding:8px 10px;display:flex;gap:8px;align-items:center}
 .chatHead button{background:none;color:#fff;font-size:20px}.chatBox{padding:10px;padding-bottom:120px;min-height:70vh}
@@ -73,7 +78,8 @@ body{background:#eef2f7;font-size:14px;color:#222}.hidden{display:none!important
 <div id="libFolders"></div><div id="libGrid" class="libGrid"></div></div>
 <div id="viewMembers" class="list hidden"></div><button class="fab" onclick="openNewChat()">+</button></div>
 <div id="chatRoom" class="hidden"><div class="chatHead"><button onclick="closeChat()">←</button><div class="avatar" id="chatAvatar">P</div><div style="flex:1"><b id="chatName" style="font-size:14px">Name</b><br><span style="font-size:11px;opacity:.8" id="chatStatus">● Synced</span></div><button onclick="startAudioCall()">📞</button><button onclick="startVideoCall()">📹</button></div><div id="chatBox" class="chatBox"></div>
-<div class="inputBar"><label class="iconBtn" style="display:flex;align-items:center;justify-content:center">📎<input type="file" id="chatFile" accept="image/*,video/*,audio/*,.pdf" style="display:none" onchange="sendFile(event)"></label><input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()"><button class="iconBtn" id="voiceBtn" onclick="toggleVoice()">🎤</button><button class="iconBtn sendBtn" onclick="sendMsg()">➤</button></div>
+<div id="typingBar" class="typing" style="display:none;padding:4px 12px">Typing...</div>
+<div class="inputBar"><label class="iconBtn" style="display:flex;align-items:center;justify-content:center">📎<input type="file" id="chatFile" accept="image/*,video/*,audio/*,.pdf" style="display:none" onchange="sendFile(event)"></label><input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()" oninput="sendTyping()"><button class="iconBtn" id="voiceBtn" onclick="toggleVoice()">🎤</button><button class="iconBtn sendBtn" onclick="sendMsg()">➤</button></div>
 <div id="voiceBar" class="hidden" style="position:fixed;bottom:58px;left:10px;right:10px;z-index:20"><div class="voiceBar"><span style="color:#ff1744">🔴</span><b id="voiceTimer">00:00</b><span style="flex:1;font-size:12px">Recording voice note...</span><button onclick="cancelVoice()" style="background:#eee;padding:8px 12px;border-radius:8px">✖ Cancel</button><button onclick="sendVoice()" style="background:#25D366;color:#fff;padding:8px 12px;border-radius:8px">➤ Send</button></div></div></div>
 <div id="callScreen" class="callScreen hidden"><a href="call.html" style="display:block;background:#25D366;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px">📞 Open 1FML Call - Voice and Video</a><h2 id="callTitle" style="font-size:18px">Video Call</h2><p id="callWith" style="font-size:13px">Calling...</p><video id="localVideo" autoplay playsinline muted></video><video id="remoteVideo" autoplay playsinline style="display:none"></video><p id="callTimer">00:00</p><div class="callBtns"><button onclick="toggleMic()" id="micBtn">🎤</button><button onclick="toggleCam()" id="camBtn">📹</button><button class="endCall" onclick="endCall()">📞</button></div></div>
 <div id="modal" class="modal hidden"><div class="modalBox" id="modalBox"></div></div><script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -111,7 +117,7 @@ if(!n||!p||!e||!pw)return alert('Fill all: Name, Phone, Email, Password');
 if(e.indexOf('@')<0)return alert('Enter valid Email');
 if(pw.length<4)return alert('Password must be 4+ characters');
 alert('Registering... please wait');
-ME={name:n,phone:p,email:e,pass:pw,familyCode:'',familyName:'',photo:'',status:'Hey there! I am using 1FML'};
+ME={name:n,phone:p,email:e,pass:pw,familyCode:'',familyName:'',photo:'',status:'Hey there! I am using 1FML',lastOnline:Date.now()};
 await db.ref('users/'+p).set(ME);
 saveMe();
 alert('Registered! Now create or join your Family');
@@ -130,6 +136,8 @@ if(!u)return alert('No account with this Phone. Tap Back to Register first');
 if(u.pass!==pw)return alert('Wrong Password for this Phone');
 ME=u;
 if(!ME.status)ME.status='Hey there! I am using 1FML';
+ME.lastOnline=Date.now();
+await db.ref('users/'+p).update({lastOnline:Date.now()});
 saveMe();
 alert('Welcome back '+ME.name);
 if(ME.familyCode)enterApp();else showFamilyPage();
@@ -170,8 +178,11 @@ document.getElementById('mainApp').classList.remove('hidden');
 document.getElementById('familyBanner').innerHTML='Family: <b>'+ME.familyName+'</b> - Code: <b>'+ME.familyCode+'</b> - You: '+ME.name;
 listenFamily();
 updateMyTopPic();
+if(ME.familyCode) db.ref('families/'+ME.familyCode+'/members/'+ME.phone).update({lastOnline:Date.now()});
+setInterval(function(){ if(ME&&ME.familyCode) db.ref('families/'+ME.familyCode+'/members/'+ME.phone).update({lastOnline:Date.now()}); },30000);
 }
 function updateMyTopPic(){var el=document.getElementById('myTopPic');if(!el)return;if(ME.photo){el.innerHTML='<img src="'+ME.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #fff">';}else{el.innerHTML='<span style="background:#fff;color:#0d47a1;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700">'+ME.name.charAt(0)+'</span>';}}
+function isOnline(m){ if(!m||!m.lastOnline) return false; return (Date.now()-m.lastOnline)<60000; }
 function listenFamily(){
 if(!ME||!ME.familyCode)return;
 db.ref('families/'+ME.familyCode+'/members').on('value',function(s){myMembers=s.val()||{};renderMembers();renderChatsList();});
@@ -187,13 +198,13 @@ function showModal(h){document.getElementById('modalBox').innerHTML=h;document.g
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 function switchTab(t){if(t==='family')t='members';var arr=['chats','calls','library','members'];arr.forEach(function(x){var v=document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1));var tb=document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1));if(v)v.classList.add('hidden');if(tb)tb.classList.remove('active');});var av=document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1));var at=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));if(av)av.classList.remove('hidden');if(at)at.classList.add('active');if(t==='calls')renderCalls(_allCalls);if(t==='library')renderLibrary(_allLib);if(t==='members')renderMembers();if(t==='chats')renderChatsList();}
 function showLibrary(){switchTab('library');}
-function avatarHTML(m,letter){if(m&&m.photo)return '<div class="avatar"><img src="'+m.photo+'"></div>';return '<div class="avatar">'+(letter||'F')+'</div>';}
+function avatarHTML(m,letter){var online=isOnline(m);var cls=online?'avatar':'avatar offline';if(m&&m.photo)return '<div class="'+cls+'"><img src="'+m.photo+'"><span class="dot"></span></div>';return '<div class="'+cls+'">'+(letter||'F')+'<span class="dot"></span></div>';}
 function renderMembers(){
 var list=Object.values(myMembers);
 var el=document.getElementById('viewMembers');
 if(!list.length){el.innerHTML='<p style="padding:20px;text-align:center">No members yet.<br>Share Code: <b>'+ME.familyCode+'</b></p>';return;}
 var html='<p style="padding:10px;font-size:13px"><b>'+ME.familyName+'</b> - '+list.length+' member(s)</p>';
-list.forEach(function(m){html+='<div class="item" onclick="viewMemberProfile(\''+m.phone+'\')">'+avatarHTML(m,m.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+m.name+'</b><br><span>'+(m.status||'Hey there!')+'</span><br><span>'+m.phone+'</span></div><span>'+(m.phone===ME.phone?'YOU':'›')+'</span></div>';});
+list.forEach(function(m){var onTxt=isOnline(m)?'<span style="color:#16a34a">● Online</span>':'<span style="color:#888">Last seen '+new Date(m.lastOnline||Date.now()).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+'</span>';html+='<div class="item" onclick="viewMemberProfile(\''+m.phone+'\')">'+avatarHTML(m,m.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+m.name+'</b><br><span>'+(m.status||'Hey there!')+'</span><br><span>'+m.phone+' • '+onTxt+'</span></div><span>'+(m.phone===ME.phone?'YOU':'›')+'</span></div>';});
 el.innerHTML=html;
 }
 function viewMemberProfile(phone){
@@ -231,10 +242,16 @@ var lastTxt='No messages yet';
 var time='';
 if(last){lastTxt=(last.from===ME.phone?'You: ':'')+(last.text||'File');time=new Date(last.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 var mem=myMembers[c.phone||c.peer||'']||{};
-var av=mem.photo?'<div class="avatar"><img src="'+mem.photo+'"></div>':'<div class="avatar">'+(c.name?c.name.charAt(0).toUpperCase():'F')+'</div>';
+var av=avatarHTML(mem,(c.name||'F').charAt(0).toUpperCase());
 html+='<div class="item" onclick="openChat(\''+id+'\',\''+(c.name||'Family').replace(/\'/g,"")+'\')">'+av+'<div style="flex:1"><b>'+(c.name||'Family Chat')+'</b><br><span>'+lastTxt+'</span><br><span>'+time+'</span></div><span>›</span></div>';
 });
 el.innerHTML=html;
+}
+function sendTyping(){
+if(!currentChat||!ME) return;
+db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/typing/'+ME.phone).set({name:ME.name,ts:Date.now()});
+clearTimeout(window._typingClear);
+window._typingClear=setTimeout(function(){ if(currentChat) db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/typing/'+ME.phone).remove(); },2500);
 }
 function openChat(id,nm){
 currentChat={id:id,name:nm||'Family'};
@@ -242,8 +259,16 @@ document.getElementById('mainApp').classList.add('hidden');
 document.getElementById('chatRoom').classList.remove('hidden');
 document.getElementById('chatName').innerText=currentChat.name;
 document.getElementById('chatAvatar').innerText=currentChat.name.charAt(0).toUpperCase();
+window._lastDate='';
 lastReadMap[id]=Date.now();saveLastRead();
 db.ref('families/'+ME.familyCode+'/chats/'+id+'/messages').off();
+db.ref('families/'+ME.familyCode+'/chats/'+id+'/typing').off();
+db.ref('families/'+ME.familyCode+'/chats/'+id+'/typing').on('value',function(s){
+var o=s.val()||{}; var bar=document.getElementById('typingBar');
+var others=Object.keys(o).filter(function(k){return k!==ME.phone;});
+if(others.length){ var nm2=o[others[0]].name||'Someone'; bar.innerText=nm2+' is typing...'; bar.style.display='block'; }
+else bar.style.display='none';
+});
 db.ref('families/'+ME.familyCode+'/chats/'+id+'/messages').on('value',function(s){
 var o=s.val()||{};
 var arr=Object.values(o).sort(function(a,b){return a.ts-b.ts;});
@@ -251,24 +276,30 @@ allMsgs[id]=arr;
 var box=document.getElementById('chatBox');
 if(!arr.length){box.innerHTML='<p style="text-align:center;color:#888;padding:20px">No messages yet.<br>Say hello</p>';return;}
 var h='';
+window._lastDate='';
 arr.forEach(function(m){
+var d=new Date(m.ts).toDateString();
+if(d!==window._lastDate){ var label=d===new Date().toDateString()?'Today':new Date(m.ts).toLocaleDateString(); h+='<div class="date-line"><span>'+label+'</span></div>'; window._lastDate=d; }
 var cls=m.from===ME.phone?'me':'other';
 var media='';
 if(m.type==='image')media='<img src="'+m.data+'">';
 if(m.type==='video')media='<video src="'+m.data+'" controls></video>';
 if(m.type==='voice')media='<audio src="'+m.data+'" controls style="width:100%"></audio>';
-h+='<div class="msg '+cls+'"><b style="font-size:12px;color:#0d47a1">'+(m.from===ME.phone?'You':(m.sender||''))+'</b><br>'+(m.text||'')+media+'<small>'+new Date(m.ts).toLocaleTimeString()+'</small></div>';
+var ticks=m.from===ME.phone?'<span class="tick read">✓✓</span>':'';
+h+='<div class="msg '+cls+'"><b style="font-size:12px;color:#0d47a1">'+(m.from===ME.phone?'You':(m.sender||''))+'</b><br>'+(m.text||'')+media+'<small>'+new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+ticks+'</small></div>';
 });
 box.innerHTML=h;
 box.scrollTop=box.scrollHeight;
 });
 }
-function closeChat(){if(currentChat)db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').off();document.getElementById('chatRoom').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');}
+function closeChat(){if(currentChat){db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').off();db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/typing').off();}document.getElementById('chatRoom').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');}
 async function sendMsg(){
 var inp=document.getElementById('chatInput');
 var t=inp.value.trim();
 if(!t||!currentChat)return;
 inp.value='';
+document.getElementById('typingBar').style.display='none';
+if(currentChat) db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/typing/'+ME.phone).remove();
 var m0={};
 m0.from=ME.phone;m0.sender=ME.name;m0.text=t;m0.ts=Date.now();
 await db.ref('families/'+ME.familyCode+'/chats/'+currentChat.id+'/messages').push(m0);
