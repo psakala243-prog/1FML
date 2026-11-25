@@ -29,7 +29,7 @@ input,textarea,select{font-size:16px!important}
 .item b{font-size:14px}.item span{font-size:13px;color:#666}
 .chatHead{background:#0d47a1;color:#fff;padding:8px 10px;display:flex;gap:8px;align-items:center}
 .chatHead button{background:none;color:#fff;font-size:20px}.chatBox{padding:10px;padding-bottom:120px;min-height:70vh}
-.msg{max-width:78%;padding:7px 9px;border-radius:10px;margin:5px 0;font-size:16px}.me{background:#bbdefb;margin-left:auto}.other{background:#fff;border:1px solid #eee}
+.msg{max-width:78%;padding:7px 9px;border-radius:10px;margin:5px 0;font-size:16px;box-shadow:0 1px 1px rgba(0,0,0,.1)}.me{background:#d9fdd3;margin-left:auto;border-top-right-radius:2px}.other{background:#fff;border:1px solid #eee;border-top-left-radius:2px}
 .msg small{display:block;font-size:11px;color:#888;text-align:right}.msg img,.msg video{width:100%;border-radius:8px;margin-top:5px}
 .inputBar{position:fixed;bottom:0;left:0;right:0;background:#f0f0f0;padding:7px;display:flex;gap:6px;align-items:center}
 .inputBar input[type=text]{flex:1;padding:10px;border-radius:20px;font-size:16px}.iconBtn{width:40px;height:40px;border-radius:50%;background:#fff;font-size:17px}.sendBtn{background:#1565c0!important;color:#fff}
@@ -498,6 +498,11 @@ async function saveSettings(){ME.name=document.getElementById('setName').value.t
 async function doBackup(){var snap=await db.ref('users/'+ME.phone).once('value');var b=new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='1FML-Backup-'+ME.phone+'.json';a.click();alert('Backup Downloaded!');}
 function openLibPicker(){var inp=document.getElementById('libFile2');inp.onchange=function(e){addToLibrary(e);};inp.click();}
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});}
+</script>
+<script>
+function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('1FML_DARK',document.body.classList.contains('dark')?'1':'0');}
+if(localStorage.getItem('1FML_DARK')==='1'){document.body.classList.add('dark');}
+setTimeout(function(){var s=document.getElementById('splash');if(s)s.style.display='none';},1200);
 </script>
 </body>
 </html>
