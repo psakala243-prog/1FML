@@ -116,6 +116,7 @@ body.dark .header,body.dark .tabs,body.dark .tabs button,body.dark .chatHead{bac
 <button class="fab" onclick="openNewChat()">+</button></div>
 <div id="chatRoom" class="hidden"><div class="chatHead"><button onclick="closeChat()">←</button><div class="avatar" id="chatAvatar">P</div><div style="flex:1"><b id="chatName" style="font-size:15px">Name</b><br><span style="font-size:12px;opacity:.8" id="chatStatus">● Online</span></div><button onclick="startAudioCall()">📞</button><button onclick="startVideoCall()">📹</button></div><div id="chatBox" class="chatBox"></div>
 <div id="typingBar" class="typing" style="display:none;padding:4px 12px">Typing...</div>
+<div id="replyBar" style="display:none;position:fixed;bottom:58px;left:10px;right:10px;background:#e3f2fd;padding:8px 10px;border-radius:8px;font-size:13px;z-index:20">Replying to: <b id="replyText"></b> <span onclick="cancelReply()" style="float:right;cursor:pointer">✖</span></div>
 <div class="inputBar"><label class="iconBtn" style="display:flex;align-items:center;justify-content:center">📎<input type="file" id="chatFile" accept="image/*,video/*,audio/*,.pdf" style="display:none" onchange="sendFile(event)"></label><input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()" oninput="sendTyping()" autocomplete="off" autocapitalize="sentences"><button class="iconBtn" id="voiceBtn" onclick="toggleVoice()">🎤</button><button class="iconBtn sendBtn" onclick="sendMsg()">➤</button></div>
 <div id="voiceBar" class="hidden" style="position:fixed;bottom:58px;left:10px;right:10px;z-index:20"><div class="voiceBar"><span style="color:#ff1744">🔴</span><b id="voiceTimer">00:00</b><span style="flex:1;font-size:13px">Recording voice note...</span><button onclick="cancelVoice()" style="background:#eee;padding:8px 12px;border-radius:8px">✖ Cancel</button><button onclick="sendVoice()" style="background:#25D366;color:#fff;padding:8px 12px;border-radius:8px">➤ Send</button></div></div></div>
 <div id="callScreen" class="callScreen hidden"><h2 id="callTitle" style="font-size:18px">Video Call</h2><p id="callWith" style="font-size:14px">Calling...</p><p id="callingLabel" class="callingLabel">📞 Calling... waiting for answer</p><video id="localVideo" autoplay playsinline muted></video><video id="remoteVideo" autoplay playsinline style="display:none"></video><p id="callTimer">00:00</p><p id="callStatusText" style="font-size:13px;color:#a5f3a5">Connecting...</p><div class="callBtns"><button onclick="toggleMic()" id="micBtn">🎤</button><button onclick="toggleCam()" id="camBtn">📹</button><button class="endCall" onclick="endCall()">📞</button></div></div>
@@ -503,6 +504,10 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('1FML_DARK',document.body.classList.contains('dark')?'1':'0');}
 if(localStorage.getItem('1FML_DARK')==='1'){document.body.classList.add('dark');}
 setTimeout(function(){var s=document.getElementById('splash');if(s)s.style.display='none';},1200);
+var replyTo=null;
+function setReply(txt){replyTo=txt;document.getElementById('replyText').innerText=txt;document.getElementById('replyBar').style.display='block';}
+function cancelReply(){replyTo=null;document.getElementById('replyBar').style.display='none';}
+async function reactToMsg(chatId,key,emoji){await db.ref('families/'+ME.familyCode+'/chats/'+chatId+'/messages/'+key+'/reaction').set(emoji);}
 </script>
 </body>
 </html>
