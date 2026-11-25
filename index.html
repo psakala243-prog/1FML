@@ -50,7 +50,9 @@ input,textarea,select{font-size:16px!important}
 .pushBanner{background:#fff3cd;border:1px solid #ffcc00;padding:10px 12px;font-size:14px;text-align:center}
 .pushBanner button{background:#0d47a1;color:#fff;padding:8px 14px;border-radius:8px;margin-left:8px;font-weight:700}
 .searchBox{padding:8px;background:#fff}.searchBox input{width:100%;padding:11px;border:1px solid #ddd;border-radius:20px;font-size:16px;background:#f0f2f5}
-<style>
+.friendBtn{background:#e3f2fd!important;color:#0d47a1!important;width:auto!important;padding:6px 10px!important;font-size:12px!important;border-radius:20px!important;margin:0!important}
+.friendBtn.accept{background:#25D366!important;color:#fff!important}
+.friendBtn.decline{background:#ffebee!important;color:#c62828!important}
 body.dark{background:#0b141a;color:#e9edef}
 body.dark .list,body.dark .modalBox,body.dark .auth{background:#111b21!important;color:#e9edef}
 body.dark .item{border-bottom:1px solid #222d34!important}
@@ -84,7 +86,7 @@ body.dark .header,body.dark .tabs,body.dark .tabs button,body.dark .chatHead{bac
 </div>
 </div>
 <div id="mainApp" class="hidden">
-<div class="header"><h2>💙 1FML</h2><button onclick="toggleDark()" style="background:none;color:#fff;font-size:20px">🌙</button>  <div id="dotMenu" class="menu hidden"><button onclick="openMyProfile()">👤 My Profile</button><button onclick="doBackup()">💾 Backup</button><button onclick="openSettings()">⚙️ Settings</button><button onclick="enablePushManually()">🔔 Turn On Call Notifications</button><button onclick="logout()">🚪 Logout</button></div></div>
+<div class="header"><h2>💙 1FML</h2><div style="display:flex;gap:6px;align-items:center"><button onclick="toggleDark()" style="background:none;color:#fff;font-size:20px">🌙</button><button onclick="toggleMenu(event)" style="background:none;color:#fff;font-size:22px">⋮</button></div><div id="dotMenu" class="menu hidden"><button onclick="openMyProfile()">👤 My Profile</button><button onclick="doBackup()">💾 Backup</button><button onclick="openSettings()">⚙️ Settings</button><button onclick="enablePushManually()">🔔 Turn On Call Notifications</button><button onclick="logout()">🚪 Logout</button></div></div>
 <div id="pushBanner" class="pushBanner hidden">🔔 Turn on notifications so calls ring even when app is closed <button onclick="enablePushManually()">TURN ON</button></div>
 <div class="tabs">
 <button id="tabChats" class="active" onclick="switchTab('chats')">💬 CHATS <span id="totalUnread" style="background:#25D366;color:#fff;border-radius:10px;padding:1px 6px;font-size:12px;display:none">0</span></button>
@@ -141,6 +143,7 @@ var libFilter='all',libSelectedMember='all',_allLib={},_allCalls={},allMsgs={},s
 var lastReadMap={};try{lastReadMap=JSON.parse(localStorage.getItem('1FML_lastRead')||'{}');}catch(e){lastReadMap={};}
 var mediaRecorder=null,voiceChunks=[],voiceStream=null,voiceTimerInt=null,voiceSec=0,voiceBlob=null,pc=null,callIdInProgress=null,inCall=false,answerHandled=false;
 var presenceTimer=null,incomingCallData=null,incomingCallKey=null,ringInterval=null,dialInterval=null,audioCtx=null;
+var friendRequests={},myFriends={},sentRequests={};
 function saveMe(){localStorage.setItem('1FML_ME',JSON.stringify(ME));}
 function saveLastRead(){localStorage.setItem('1FML_lastRead',JSON.stringify(lastReadMap));}
 function cleanPhone(p){return (p||'').replace(/[^0-9]/g,'');}
@@ -214,11 +217,40 @@ var yest=new Date(now);yest.setDate(now.getDate()-1);
 if(d.toDateString()===yest.toDateString())return 'Last seen Yesterday '+time;
 return 'Last seen '+d.toLocaleDateString()+' '+time;
 }
+// --- FRIEND REQUESTS ---
+async function sendFriendRequest(toPhone){
+if(!toPhone||toPhone===ME.phone)return;
+if(myFriends[toPhone])return alert('Already friends');
+if(sentRequests[toPhone])return alert('Request already sent');
+await db.ref('friendRequests/'+toPhone+'/'+ME.phone).set({from:ME.phone,fromName:ME.name,fromPhoto:ME.photo||'',ts:Date.now(),status:'pending'});
+await db.ref('sentRequests/'+ME.phone+'/'+toPhone).set({to:toPhone,ts:Date.now(),status:'pending'});
+alert('Friend request sent to '+(allUsers[toPhone]?allUsers[toPhone].name:toPhone));
+}
+async function acceptFriendRequest(fromPhone){
+await db.ref('friends/'+ME.phone+'/'+fromPhone).set({phone:fromPhone,name:allUsers[fromPhone]?allUsers[fromPhone].name:fromPhone,ts:Date.now()});
+await db.ref('friends/'+fromPhone+'/'+ME.phone).set({phone:ME.phone,name:ME.name,ts:Date.now()});
+await db.ref('friendRequests/'+ME.phone+'/'+fromPhone).remove();
+await db.ref('sentRequests/'+fromPhone+'/'+ME.phone).remove();
+alert('You are now friends!');
+}
+async function declineFriendRequest(fromPhone){
+await db.ref('friendRequests/'+ME.phone+'/'+fromPhone).remove();
+await db.ref('sentRequests/'+fromPhone+'/'+ME.phone).remove();
+}
+function friendButtonHTML(u){
+if(myFriends[u.phone])return '<button class="friendBtn" onclick="event.stopPropagation();createChat(\''+u.phone+'\')">💬 Friend • Chat</button>';
+if(sentRequests[u.phone])return '<button class="friendBtn" onclick="event.stopPropagation()">⏳ Request Sent</button>';
+if(friendRequests[u.phone])return '<button class="friendBtn accept" onclick="event.stopPropagation();acceptFriendRequest(\''+u.phone+'\')">✅ Accept</button>';
+return '<button class="friendBtn" onclick="event.stopPropagation();sendFriendRequest(\''+u.phone+'\')">➕ Add Friend</button>';
+}
 function listenGlobal(){
 if(!ME)return;
 db.ref('users').on('value',function(s){allUsers=s.val()||{};renderChatsList();renderFamilyTab();});
 db.ref('global_chats').on('value',function(s){myChats=s.val()||{};renderChatsList();});
 db.ref('global_calls').on('value',function(s){renderCalls(s.val()||{});checkIncomingCalls(s.val()||{});checkCallAnswered(s.val()||{});});
+db.ref('friendRequests/'+ME.phone).on('value',function(s){friendRequests=s.val()||{};renderChatsList();});
+db.ref('friends/'+ME.phone).on('value',function(s){myFriends=s.val()||{};renderChatsList();});
+db.ref('sentRequests/'+ME.phone).on('value',function(s){sentRequests=s.val()||{};renderChatsList();});
 if(ME.familyCode){
 db.ref('families/'+ME.familyCode+'/members').on('value',function(s){familyMembers=s.val()||{};renderFamilyTab();});
 db.ref('families/'+ME.familyCode+'/library').on('value',function(s){renderLibrary(s.val()||{});});
@@ -266,6 +298,15 @@ function renderChatsList(){
 var el=document.getElementById('viewChats');if(!el)return;
 var myChatIds=Object.keys(myChats).filter(function(id){return id.indexOf(ME.phone)>-1;});
 var html='<div class="searchBox"><input id="peopleSearch" placeholder="🔍 Search people by name or phone..." value="'+searchTerm+'" oninput="searchTerm=this.value;renderChatsList()" style="font-size:16px"></div>';
+var reqKeys=Object.keys(friendRequests||{});
+if(reqKeys.length){
+html+='<div style="background:#fff3cd;padding:10px;border:1px solid #ffcc00;border-radius:10px;margin:8px"><b>🔔 Friend Requests ('+reqKeys.length+')</b>';
+reqKeys.forEach(function(fromPh){
+var r=friendRequests[fromPh];var u=allUsers[fromPh]||{};
+html+='<div style="display:flex;gap:8px;align-items:center;margin-top:8px">'+avatarHTML(u,(u.name||r.fromName||'F').charAt(0))+'<div style="flex:1"><b>'+(u.name||r.fromName||fromPh)+'</b><br><span>'+fromPh+'</span></div><button class="friendBtn accept" onclick="acceptFriendRequest(\''+fromPh+'\')">✅ Accept</button><button class="friendBtn decline" onclick="declineFriendRequest(\''+fromPh+'\')">❌</button></div>';
+});
+html+='</div>';
+}
 var totalUnread=0;
 myChatIds.forEach(function(id){
 var c=myChats[id]||{};var msgs=allMsgs[id]||[];var last=msgs[msgs.length-1];
@@ -283,12 +324,12 @@ var others=Object.values(allUsers).filter(function(u){return u.phone!==ME.phone;
 if(searchTerm){
 var q=searchTerm.toLowerCase();
 others=others.filter(function(u){return (u.name||'').toLowerCase().indexOf(q)>-1||(u.phone||'').indexOf(q)>-1;});
-html+='<p style="padding:10px;font-size:13px;color:#0d47a1"><b>All People on 1FML - Tap to chat</b></p>';
-others.forEach(function(u){html+='<div class="item" onclick="createChat(\''+u.phone+'\')">'+avatarHTML(u,u.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+u.name+'</b><br><span>'+u.phone+' • '+formatLastSeen(u)+'</span></div><span>💬</span></div>';});
+html+='<p style="padding:10px;font-size:13px;color:#0d47a1"><b>All People on 1FML - Send Friend Request or Chat</b></p>';
+others.forEach(function(u){html+='<div class="item" onclick="createChat(\''+u.phone+'\')">'+avatarHTML(u,u.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+u.name+'</b><br><span>'+u.phone+' • '+formatLastSeen(u)+'</span></div>'+friendButtonHTML(u)+'</div>';});
 if(!others.length)html+='<p style="padding:10px;text-align:center;color:#888">No person found for "'+searchTerm+'"</p>';
 }else{
-html+='<p style="padding:10px;font-size:13px;color:#0d47a1"><b>All People on 1FML - Tap + or search to chat anyone</b></p>';
-others.slice(0,20).forEach(function(u){html+='<div class="item" onclick="createChat(\''+u.phone+'\')">'+avatarHTML(u,u.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+u.name+'</b><br><span>'+u.phone+' • '+formatLastSeen(u)+'</span></div><span>💬</span></div>';});
+html+='<p style="padding:10px;font-size:13px;color:#0d47a1"><b>All People on 1FML - Send Friend Request</b> • Friends: '+(Object.keys(myFriends||{}).length)+'</p>';
+others.slice(0,20).forEach(function(u){html+='<div class="item" onclick="createChat(\''+u.phone+'\')">'+avatarHTML(u,u.name.charAt(0).toUpperCase())+'<div style="flex:1"><b>'+u.name+'</b><br><span>'+u.phone+' • '+formatLastSeen(u)+'</span></div>'+friendButtonHTML(u)+'</div>';});
 }
 el.innerHTML=html;
 var tu=document.getElementById('totalUnread');if(tu){if(totalUnread>0){tu.innerText=totalUnread;tu.style.display='inline';}else tu.style.display='none';}
@@ -297,9 +338,9 @@ function openNewChat(){
 var ms=Object.values(allUsers).filter(function(m){return m.phone!==ME.phone;});
 if(!ms.length)return alert('No other people on 1FML yet. Share the app!');
 var o='<div class="searchBox"><input placeholder="Search..." oninput="filterNewChat(this.value)" style="font-size:16px"></div><div id="newChatList">';
-ms.forEach(function(m){o+='<button data-name="'+(m.name||'').toLowerCase()+' '+m.phone+'" onclick="createChat(\''+m.phone+'\')" style="background:#fff;color:#222;border:1px solid #ddd;text-align:left">'+m.name+' - '+m.phone+'</button>';});
+ms.forEach(function(m){o+='<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><button data-name="'+(m.name||'').toLowerCase()+' '+m.phone+'" onclick="createChat(\''+m.phone+'\')" style="flex:1;background:#fff;color:#222;border:1px solid #ddd;text-align:left">'+m.name+' - '+m.phone+'</button>'+friendButtonHTML(m)+'</div>';});
 o+='</div>';
-showModal('<h3>Chat Anyone on 1FML</h3><p style="font-size:13px">Tap any person - no Family Code needed</p>'+o+'<button class="closeBtn" onclick="closeModal()">CANCEL</button>');
+showModal('<h3>Chat Anyone / Add Friend</h3><p style="font-size:13px">Tap Add Friend to send request, or tap name to chat</p>'+o+'<button class="closeBtn" onclick="closeModal()">CANCEL</button>');
 }
 function filterNewChat(q){q=q.toLowerCase();document.querySelectorAll('#newChatList button').forEach(function(b){b.style.display=b.getAttribute('data-name').indexOf(q)>-1?'block':'none';});}
 async function createChat(ph){
@@ -324,7 +365,7 @@ lastReadMap[id]=Date.now();saveLastRead();renderChatsList();
 db.ref('global_chats/'+id+'/messages').off();db.ref('global_chats/'+id+'/typing').off();
 db.ref('global_chats/'+id+'/typing').on('value',function(s){var o=s.val()||{};var bar=document.getElementById('typingBar');var others=Object.keys(o).filter(function(k){return k!==ME.phone;});if(others.length){bar.innerText=(o[others[0]].name||'Someone')+' is typing...';bar.style.display='block';}else bar.style.display='none';});
 db.ref('global_chats/'+id+'/messages').on('value',function(s){
-var o=s.val()||{};var arr=Object.values(o).sort(function(a,b){return a.ts-b.ts;});allMsgs[id]=arr;
+var o=s.val()||{};var arr=Object.entries(o).map(function(kv){var m=kv[1];m._key=kv[0];return m;}).sort(function(a,b){return a.ts-b.ts;});allMsgs[id]=arr;
 var box=document.getElementById('chatBox');if(!arr.length){box.innerHTML='<p style="text-align:center;color:#888;padding:20px">No messages yet.<br>Say hello to '+nm+'</p>';return;}
 var h='';window._lastDate='';
 arr.forEach(function(m){
@@ -334,7 +375,10 @@ if(m.type==='image')media='<img src="'+m.data+'">';
 if(m.type==='video')media='<video src="'+m.data+'" controls></video>';
 if(m.type==='voice')media='<audio src="'+m.data+'" controls style="width:100%"></audio>';
 var ticks=m.from===ME.phone?'<span class="tick read">✓✓</span>':'';
-h+='<div class="msg '+cls+'"><b style="font-size:13px;color:#0d47a1">'+(m.from===ME.phone?'You':(m.sender||''))+'</b><br>'+(m.text||'')+media+'<small>'+new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+ticks+'</small></div>';
+var replyHtml=m.replyTo?'<div style="background:#eee;border-left:3px solid #0d47a1;padding:4px 6px;font-size:12px;border-radius:4px;margin-bottom:4px">'+m.replyTo+'</div>':'';
+var reactHtml=m.reaction?'<div style="font-size:16px">'+m.reaction+'</div>':'';
+var safeText=(m.text||'').replace(/'/g,'').replace(/"/g,'');
+h+='<div class="msg '+cls+'">'+replyHtml+'<b style="font-size:13px;color:#0d47a1">'+(m.from===ME.phone?'You':(m.sender||''))+'</b><br>'+(m.text||'')+media+reactHtml+'<small>'+new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+ticks+'</small><div style="margin-top:4px;display:flex;gap:10px"><span onclick="setReply(\''+safeText+'\')" style="font-size:12px;color:#0d47a1;cursor:pointer">↩ Reply</span><span onclick="reactToMsg(\''+id+'\',\''+m._key+'\',\'❤️\')" style="font-size:12px;cursor:pointer">❤️</span><span onclick="reactToMsg(\''+id+'\',\''+m._key+'\',\'😂\')" style="font-size:12px;cursor:pointer">😂</span></div></div>';
 });
 box.innerHTML=h;box.scrollTop=box.scrollHeight;
 });
@@ -344,11 +388,12 @@ async function sendMsg(){
 var inp=document.getElementById('chatInput');var t=inp.value.trim();if(!t||!currentChat)return;inp.value='';
 document.getElementById('typingBar').style.display='none';
 if(currentChat)db.ref('global_chats/'+currentChat.id+'/typing/'+ME.phone).remove();
-await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:t,ts:Date.now()});
+var newMsg={from:ME.phone,sender:ME.name,text:t,ts:Date.now()};if(replyTo){newMsg.replyTo=replyTo;cancelReply();}
+await db.ref('global_chats/'+currentChat.id+'/messages').push(newMsg);
 }
 async function sendFile(e){
 var f=e.target.files[0];if(!f||!currentChat)return;alert('Uploading...');
-try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:'File: '+f.name,type:ty,data:url,ts:Date.now()});alert('Sent');}catch(err){alert('Send failed: '+err.message);}
+try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:'File: '+f.name,type:ty,data:url,[STRIPPED] failed: '+err.message);}
 }
 async function toggleVoice(){
 var bar=document.getElementById('voiceBar');
@@ -359,7 +404,7 @@ try{voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRec
 function cancelVoice(){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();if(voiceStream)voiceStream.getTracks().forEach(function(t){t.stop();});clearInterval(voiceTimerInt);document.getElementById('voiceBar').classList.add('hidden');}
 async function sendVoice(){
 if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
-setTimeout(async function(){clearInterval(voiceTimerInt);document.getElementById('voiceBar').classList.add('hidden');if(voiceStream)voiceStream.getTracks().forEach(function(t){t.stop();});if(!voiceBlob||!currentChat)return;try{alert('Sending voice...');var url=await uploadToCloudinary(new File([voiceBlob],'voice.webm',{type:'audio/webm'}));await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:'Voice note',type:'voice',data:url,ts:Date.now()});}catch(err){alert('Voice failed: '+err.message);}},400);
+setTimeout(async function(){clearInterval(voiceTimerInt);document.getElementById('voiceBar').classList.add('hidden');if(voiceStream)voiceStream.getTracks().forEach(function(t){t.stop();});if(!voiceBlob||!currentChat)return;try{alert('Sending voice...');var url=await uploadToCloudinary(new File([voiceBlob],'voice.webm',{type:'audio/webm'}));await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:'Voice note',type:'voice',data:url,[STRIPPED] failed: '+err.message);}},400);
 }
 function renderCalls(obj){
 if(obj)_allCalls=obj;var el=document.getElementById('viewCalls');if(!el)return;
@@ -420,7 +465,7 @@ try{localStream=await navigator.mediaDevices.getUserMedia({video:type==='video',
 }
 function toggleMic(){micOn=!micOn;if(localStream)localStream.getAudioTracks().forEach(function(t){t.enabled=micOn;});document.getElementById('micBtn').innerText=micOn?'🎤':'🔇';}
 function toggleCam(){camOn=!camOn;if(localStream)localStream.getVideoTracks().forEach(function(t){t.enabled=camOn;});document.getElementById('camBtn').innerText=camOn?'📹':'🚫';}
-async function endCall(){clearInterval(callInterval);stopAllCallSounds();var dur=document.getElementById('callTimer').innerText;var cid=callIdInProgress||(currentChat?currentChat.id:null);if(cid&&ME){try{await db.ref('global_calls/'+cid).update({status:'ended',duration:dur});await db.ref('global_calls').push({with:currentChat?currentChat.name:'Call',type:'call',by:ME.name,duration:dur,ts:Date.now()});}catch(e){}}if(localStream)localStream.getTracks().forEach(function(t){t.stop();});if(pc){try{pc.close();}catch(e){}pc=null;}inCall=false;callIdInProgress=null;answerHandled=false;document.getElementBy('callScreen').classList.add('hidden');document.getElementById('incomingCall').classList.add('hidden');}
+async function endCall(){clearInterval(callInterval);stopAllCallSounds();var dur=document.getElementById('callTimer').innerText;var cid=callIdInProgress||(currentChat?currentChat.id:null);if(cid&&ME){try{await db.ref('global_calls/'+cid).update({status:'ended',duration:dur});await db.ref('global_calls').push({with:currentChat?currentChat.name:'Call',type:'call',by:ME.name,duration:dur,ts:Date.now()});}catch(e){}}if(localStream)localStream.getTracks().forEach(function(t){t.stop();});if(pc){try{pc.close();}catch(e){}pc=null;}inCall=false;callIdInProgress=null;answerHandled=false;document.getElementById('callScreen').classList.add('hidden');document.getElementById('incomingCall').classList.add('hidden');}
 function makeCode(fn){var b=(fn||'FAMILY').replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,7)||'FAMILY';return b+'-'+Math.floor(1000+Math.random()*9000);}
 function renderFamilyTab(){
 if(!ME)return;
@@ -486,7 +531,7 @@ async function addToLibrary(e){
 var f=e.target.files[0];if(!f)return;if(!ME.familyCode)return alert('Join or Create a Family first to use Library');
 alert('Picked: '+f.name+' - Saving now, wait...');if(f.size>20*1024*1024)return alert('Max 20MB');
 var st=document.getElementById('libStatus');if(st)st.innerText='Saving '+f.name+'...';
-try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('families/'+ME.familyCode+'/library').push({name:f.name,type:ty,data:url,by:ME.name,ownerPhone:ME.phone,ownerName:ME.name,ts:Date.now()});if(st)st.innerText='Saved: '+f.name;alert('Added to Family Library: '+f.name);}catch(err){alert('Library upload failed: '+err.message);}
+try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('families/'+ME.familyCode+'/library').push({name:f.name,type:ty,data:url,[STRIPPED] '+f.name;alert('Added to Family Library: '+f.name);}catch(err){alert('Library upload failed: '+err.message);}
 }
 function openMyProfile(){
 var photo=ME.photo?'<img src="'+ME.photo+'" class="profilePic">':'<div class="profilePic" style="display:flex;align-items:center;justify-content:center;font-size:36px">👤</div>';
@@ -507,7 +552,7 @@ setTimeout(function(){var s=document.getElementById('splash');if(s)s.style.displ
 var replyTo=null;
 function setReply(txt){replyTo=txt;document.getElementById('replyText').innerText=txt;document.getElementById('replyBar').style.display='block';}
 function cancelReply(){replyTo=null;document.getElementById('replyBar').style.display='none';}
-async function reactToMsg(chatId,key,emoji){await db.ref('families/'+ME.familyCode+'/chats/'+chatId+'/messages/'+key+'/reaction').set(emoji);}
+async function reactToMsg(chatId,key,emoji){await db.ref('global_chats/'+chatId+'/messages/'+key+'/reaction').set(emoji);}
 </script>
 </body>
 </html>
