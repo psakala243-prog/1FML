@@ -286,5 +286,16 @@ function showStatusAt(idx){if(idx<0)idx=0;if(idx>=statusViewerList.length){if(st
 async function editMyStatusItem(){var s=statusViewerList[statusViewerIdx];if(!s)return;var nt=prompt('Edit Status Text:',s.text||'');if(nt===null)return;var u={};u.text=nt;await db.ref('status/'+ME.phone+'/'+s._key).update(u);alert('Status edited!');if(statusTimer)clearTimeout(statusTimer);closeModal();}
 async function deleteMyStatusItem(){var s=statusViewerList[statusViewerIdx];if(!s)return;if(!confirm('Delete this status?'))return;await db.ref('status/'+ME.phone+'/'+s._key).remove();alert('Deleted this status');if(statusTimer)clearTimeout(statusTimer);closeModal();}
 </script>
-</body>
+<script>
+function viewStatusOf(phone){
+  db.ref('status/'+phone).once('value').then(function(snap){
+    var items = snap.val() || {};
+    var now = Date.now();
+    statusViewerList = Object.entries(items).map(function(kv){var s=kv[1];s._key=kv[0];return s;}).filter(function(s){return now-(s.timeStamp||s.ts||0)<24*60*60*1000;}).sort(function(a,b){return (a.timeStamp||a.ts||0)-(b.timeStamp||b.ts||0);});
+    if(!statusViewerList.length){ alert('No status found.\n\n1. Did you post status in last 24 hours?\n2. If it is older than 24h, WhatsApp deletes it automatically.\n3. Try posting a NEW status now and tap it again.'); return; }
+    statusViewerPhone = phone; statusViewerIdx = 0; showStatusAt(0);
+  }).catch(function(e){ alert('Cannot load status: '+e.message); });
+}
+function viewMyStatus(){ viewStatusOf(ME.phone); }
+</script></body>
 </html>
