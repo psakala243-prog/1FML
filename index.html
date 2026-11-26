@@ -205,6 +205,6 @@ async function postStatusPhoto(e){var f=e.target.files[0];if(!f)return;alert('Up
 async function sendFile(e){var f=e.target.files[0];if(!f||!currentChat)return;alert('Uploading...');try{var url=await uploadToCloudinary(f);var ty=getFileType(f);var obj={from:ME.phone,sender:ME.name,text:'File: '+f.name,type:ty,data:url,[STRIPPED] sent');}}
 async function sendVoice(){if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();setTimeout(async function(){clearInterval(voiceTimerInt);document.getElementById('voiceBar').classList.add('hidden');if(voiceStream)voiceStream.getTracks().forEach(function(t){t.stop();});if(!voiceBlob||!currentChat)return;try{alert('Sending voice...');var url=await uploadToCloudinary(new File([voiceBlob],'voice.webm',{type:'audio/webm'}));await db.ref('global_chats/'+currentChat.id+'/messages').push({from:ME.phone,sender:ME.name,text:'Voice note',type:'voice',data:url,[STRIPPED] sent');}catch(err){alert('Voice failed: '+err.message);}},400);}
 async function addToLibrary(e){var f=e.target.files[0];if(!f)return;if(!ME.familyCode)return alert('Join or Create Family first');if(f.size>20*1024*1024)return alert('Max 20MB');alert('Saving '+f.name+'...');try{var url=await uploadToCloudinary(f);var ty=getFileType(f);await db.ref('families/'+ME.familyCode+'/library').push({name:f.name,type:ty,data:url,[STRIPPED] '+f.name);alert('Added: '+f.name);}catch(err){alert('Library failed: '+err.message);}}
-</script></script>
+</script>
 </body>
 </html>
