@@ -348,30 +348,6 @@ input[placeholder*="Message"], input[placeholder*="message"], input[placeholder*
 }
 .chat-bar .extra-btn, .msg-bar .extra-btn{ display:none !important; }
 body{ padding-bottom:70px !important; }
-</style>
-<script>
-function makeWhatsAppChatBar(){
-  // Find every text input that is for chatting
-  var inputs = document.querySelectorAll('input[type="text"], input:not([type]), textarea');
-  inputs.forEach(function(inp){
-    var ph = (inp.placeholder||'').toLowerCase();
-    if(ph.indexOf('message')>-1 || ph.indexOf('type')>-1 || ph.indexOf('chat')>-1 || inp.id.toLowerCase().indexOf('msg')>-1 || inp.id.toLowerCase().indexOf('chat')>-1){
-      inp.style.fontSize='16px';
-      var parent = inp.parentElement;
-      if(parent && !parent.classList.contains('chat-bar')){
-        parent.classList.add('chat-bar');
-        // Keep only 1 send button, hide others in same bar
-        var btns = parent.querySelectorAll('button');
-        if(btns.length > 1){
-          for(var i=0;i<btns.length-1;i++){ btns[i].style.display='none'; }
-          var send = btns[btns.length-1];
-          send.innerHTML='➤'; send.style.background='#00a884';
-        }
-      }
-    }
-  });
-}
-setInterval(makeWhatsAppChatBar, 1000);
 </script>
 </body>
 </html>
