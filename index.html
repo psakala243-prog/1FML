@@ -297,5 +297,34 @@ function viewStatusOf(phone){
   }).catch(function(e){ alert('Cannot load status: '+e.message); });
 }
 function viewMyStatus(){ viewStatusOf(ME.phone); }
-</script></body>
+</script>
+<script>
+function fixMyStatusTap(){
+  var all = document.querySelectorAll('img');
+  all.forEach(function(img){
+    var parent = img.parentElement;
+    if(!parent) return;
+    var txt = parent.innerText || '';
+    // Find My Status row
+    if(txt.indexOf('My Status') > -1 || txt.indexOf('6 status') > -1){
+      // Avatar image itself -> VIEW
+      img.onclick = function(e){ e.stopPropagation(); viewStatusOf(ME.phone); };
+      img.style.cursor = 'pointer';
+    }
+  });
+  var rows = document.querySelectorAll('div');
+  rows.forEach(function(d){
+    if(d.innerText && d.innerText.indexOf('My Status') > -1 && d.innerText.indexOf('6 status') > -1 && !d.dataset.fixed){
+      d.dataset.fixed = '1';
+      d.onclick = function(e){
+        // If they tapped the + / pencil / lock, let it add/edit
+        if(e.target.tagName==='BUTTON' || e.target.closest('button')) return;
+        e.stopPropagation(); viewStatusOf(ME.phone);
+      };
+    }
+  });
+}
+setInterval(fixMyStatusTap, 1000);
+</script>
+</body>
 </html>
