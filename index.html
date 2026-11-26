@@ -105,7 +105,10 @@ function showLogin(){document.getElementById('regBox').style.display='none';docu
 function showRegister(){document.getElementById('regBox').style.display='block';document.getElementById('loginBox').style.display='none';document.getElementById('toLoginBtn').style.display='block';document.getElementById('toggleText2').style.display='none';}
 function updateOfflineBar(){var b=document.getElementById('offlineBar');if(!b)return;if(!navigator.onLine){b.style.display='block';}else{b.style.display='none';}}
 function updateLowDataBadge(){var b=document.getElementById('lowDataBadge');if(!b)return;b.style.display=lowDataMode?'inline':'none';}
-function toggleLowData(){lowDataMode=!lowDataMode;localStorage.setItem('1FML_LOW',lowDataMode?'1':'0');updateLowDataBadge();alert(lowDataMode?'Low Data ON - photos will be smaller':'Low Data OFF');}
+function var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;var b=document.getElementById('installBtn');if(b)b.style.display='inline-block';});
+function doInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted')alert('1FML Installing... Check your desktop / home screen');deferredPrompt=null;});}else{alert('To Install on PC:\n\nChrome / Edge: Click 3 dots top-right > Save and Share > Install 1FML > Install\n\nOr: Click the Install icon in address bar (computer icon) > Install\n\nOn Phone: Menu > Add to Home Screen');}}
+if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js');}catch(e){}});} toggleLowData(){lowDataMode=!lowDataMode;localStorage.setItem('1FML_LOW',lowDataMode?'1':'0');updateLowDataBadge();alert(lowDataMode?'Low Data ON - photos will be smaller':'Low Data OFF');}
 function addPoints(n,why){myPoints+=n;localStorage.setItem('1FML_POINTS',myPoints);if(why)alert('💰 +'+n+' points! '+why+' Total: '+myPoints);}
 function showPoints(){alert('🏆 Your 1FML Points: '+myPoints+'\nInvite friend = +10\nVideo like = +1\n100 points = Creator Badge');}
 function inviteFriend(){var txt='Join me on 1FML - Chat, Call, Status, Earn Points! '+location.href;if(navigator.share){navigator.share({text:txt});}else{prompt('Copy and share this link:',txt);}addPoints(10,'You invited a friend!');}
