@@ -349,5 +349,44 @@ input[placeholder*="Message"], input[placeholder*="message"], input[placeholder*
 .chat-bar .extra-btn, .msg-bar .extra-btn{ display:none !important; }
 body{ padding-bottom:70px !important; }
 </script>
+<style>
+.chat-bar, .msg-bar, .message-bar, #chatInputBar, #msgBar, .chat-footer{
+  position: static !important; bottom: auto !important;
+}
+body{ padding-bottom: 0 !important; }
+/* Fix + button - move it up so it doesn't sit on AI */
+button[onclick*="add"], .fab-add, #addBtn{
+  bottom: 90px !important; right: 16px !important; z-index: 1000 !important;
+}
+/* Fix AI robot button - move to left so it doesn't cover Add */
+#aiFab, .ai-fab, [id*="ai"]{
+  bottom: 90px !important; right: 80px !important; z-index: 1000 !important;
+}
+/* Fix Add Friend buttons - don't let them hide */
+button{ max-width: 100% !important; white-space: nowrap !important; }
+/* Fix top tabs - allow scroll */
+nav, .tabs, .tab-bar{ overflow-x: auto !important; white-space: nowrap !important; }
+</style><script>
+function askNotificationAgain(){
+  if(!('Notification' in window)){ alert('This phone does not support notifications'); return; }
+  if(Notification.permission === 'granted'){
+    alert('Notifications are already ALLOWED ✓');
+    return;
+  }
+  if(Notification.permission === 'denied'){
+    alert('You blocked notifications before. Go to: Phone Settings > Apps > Chrome / 1FML > Notifications > Allow, then reopen app.');
+    return;
+  }
+  Notification.requestPermission().then(function(p){
+    if(p === 'granted') alert('Thank you! Notifications ALLOWED ✓');
+    else alert('You tapped Block. Go to Settings to allow later.');
+  });
+}
+document.addEventListener('click', function(){
+  if(Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+}, { once: true });
+</script>
 </body>
 </html>
